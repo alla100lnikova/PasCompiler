@@ -1,0 +1,22 @@
+program example(a);
+
+type type1=integer;
+	 type2 = record
+		a: boolean;
+		b: record
+			c:string;
+			d:char;
+		   end;
+		end;
+var
+	h, b:type1;
+    d, c:b;
+	n: type2;
+	k:type3;
+begin
+	a:=true;
+	f:=3+2;
+	b:=4;
+	k:=h+b;
+	n.b.x:='tst'
+end.

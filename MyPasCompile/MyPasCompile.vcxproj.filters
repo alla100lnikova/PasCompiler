@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Файлы исходного кода">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Заголовочные файлы">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Файлы ресурсов">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Файлы исходного кода\Common">
+      <UniqueIdentifier>{9dc148ae-c0d1-477d-aa5f-5172ee5b19a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы исходного кода\Analyzers">
+      <UniqueIdentifier>{8c11e232-5c8b-431d-966b-cffd031a4fe3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы исходного кода\Analyzers\Lexer">
+      <UniqueIdentifier>{4b4fb03d-4d0d-4baa-8e0c-7ec10bd9b497}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы исходного кода\Semantic">
+      <UniqueIdentifier>{f9c95e61-8fdc-4b95-8181-998ab186ff6e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CLexer.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="CSymbol.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="CValue.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="CCompiler.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="Constants.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="CParser.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="CIdent.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="CSemantic.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="CSymbol.cpp">
+      <Filter>Файлы исходного кода\Analyzers\Lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="CValue.cpp">
+      <Filter>Файлы исходного кода\Analyzers\Lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="CCompiler.cpp">
+      <Filter>Файлы исходного кода\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Constants.cpp">
+      <Filter>Файлы исходного кода\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Program.cpp">
+      <Filter>Файлы исходного кода\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="CParser.cpp">
+      <Filter>Файлы исходного кода\Analyzers</Filter>
+    </ClCompile>
+    <ClCompile Include="CSemantic.cpp">
+      <Filter>Файлы исходного кода\Analyzers</Filter>
+    </ClCompile>
+    <ClCompile Include="CLexer.cpp">
+      <Filter>Файлы исходного кода\Analyzers</Filter>
+    </ClCompile>
+    <ClCompile Include="CIdent.cpp">
+      <Filter>Файлы исходного кода\Semantic</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Program.txt">
+      <Filter>Файлы ресурсов</Filter>
+    </Text>
+  </ItemGroup>
+</Project>
