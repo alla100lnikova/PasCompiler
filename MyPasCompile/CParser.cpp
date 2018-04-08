@@ -2,7 +2,7 @@
 
 void CParser::AddErrorAndSkip(int ErrorCode, vector<eOperator> SkipSym)
 {
-	if (ErrorCode != 0) Constants::AddError( ErrorCode,{ Lexer->GetCurrentStr(), 0 } );
+	if (ErrorCode != 0) Constants::AddError(ErrorCode, { Lexer->GetCurrentStr(), 0 });
 	if (SkipSym.size() != 0) SkipTo(SkipSym);
 }
 
@@ -32,11 +32,11 @@ bool CParser::Program()
 		}
 		else
 		{
-			Sem->SetProgName(m_pCurrentSymbol, Lexer->GetCurrentStr());				
+			Sem->SetProgName(m_pCurrentSymbol, Lexer->GetCurrentStr());
 		}
-		if(LexerGiveMeSymbolBistra() && FileList()) LexerGiveMeSymbolBistra();
+		if (LexerGiveMeSymbolBistra() && FileList()) LexerGiveMeSymbolBistra();
 	}
-	
+
 	if (ProgramBlock() && !Accept(point, false))
 	{
 		AddErrorAndSkip(61, {});
@@ -57,7 +57,7 @@ bool CParser::FileList()
 			if (Accept(comma)) continue;
 			else
 			{
-				if(!Accept(rightpar, false))
+				if (!Accept(rightpar, false))
 					AddErrorAndSkip(20, { rightpar, semicolon, typesy, varsy, beginsy, ifsy, whilesy, withsy, endsy });
 				break;
 			}
@@ -114,18 +114,17 @@ bool CParser::ProgramBlock()
 bool CParser::TypesBlock()
 {
 	while (LexerGiveMeSymbolBistra()
-			&& (!Accept(endsy, false)
-				&& !Accept(varsy, false)
-				&& !Accept(beginsy, false)
-				&& !Accept(ifsy, false)
-				&& !Accept(whilesy, false)
-				&& !Accept(withsy, false)))
+		&& (!Accept(endsy, false)
+			&& !Accept(varsy, false)
+			&& !Accept(beginsy, false)
+			&& !Accept(ifsy, false)
+			&& !Accept(whilesy, false)
+			&& !Accept(withsy, false)))
 	{
-		if(!TypeDescription()) break;
+		if (!TypeDescription()) break;
 		if (!Accept(semicolon))
 		{
-			AddErrorAndSkip(14, {});
-			break;
+			AddErrorAndSkip(14, { semicolon, varsy, beginsy, ifsy, whilesy, withsy, endsy });
 		}
 	}
 
@@ -133,25 +132,25 @@ bool CParser::TypesBlock()
 	{
 		switch (m_pCurrentSymbol->SymbolCode)
 		{
-			case varsy:
-				if (!VarBlock())
-				{
-					AddErrorAndSkip(17, {});
-					return false;
-				}
-				break;
-			case beginsy:
-				if (LexerGiveMeSymbolBistra()) OperatorBlock();
-				else
-				{
-					AddErrorAndSkip(17, {});
-					return false;
-				}
-				break;
-			default:
+		case varsy:
+			if (!VarBlock())
+			{
 				AddErrorAndSkip(17, {});
-				OperatorBlock();
-				break;
+				return false;
+			}
+			break;
+		case beginsy:
+			if (LexerGiveMeSymbolBistra()) OperatorBlock();
+			else
+			{
+				AddErrorAndSkip(17, {});
+				return false;
+			}
+			break;
+		default:
+			AddErrorAndSkip(17, {});
+			OperatorBlock();
+			break;
 		}
 	}
 	else
@@ -170,7 +169,7 @@ bool CParser::TypeDescription()
 		Sem->SetOldSym(m_pCurrentSymbol);//???
 		if (Accept(equalsy))
 		{
-			if(LexerGiveMeSymbolBistra()) return Type() != nullptr;
+			if (LexerGiveMeSymbolBistra()) return Type() != nullptr;
 			else
 			{
 				AddErrorAndSkip(18, {});
@@ -195,20 +194,20 @@ CType* CParser::Type()
 {
 	switch (m_pCurrentSymbol->SymbolCode)
 	{
-		case ident:
-			return static_cast<CType*>(Sem->CheckDescription(m_pCurrentSymbol, Lexer->GetCurrentStr(), utType));
-		case recordsy:
-			return RecordType();
-		default:
-			AddErrorAndSkip(2, { varsy, beginsy, ifsy, whilesy, withsy, endsy });
-			return nullptr;
+	case ident:
+		return static_cast<CType*>(Sem->CheckDescription(m_pCurrentSymbol, Lexer->GetCurrentStr(), utType));
+	case recordsy:
+		return RecordType();
+	default:
+		AddErrorAndSkip(2, { varsy, beginsy, ifsy, whilesy, withsy, endsy });
+		return nullptr;
 	}
 }
 
 CRecordType* CParser::RecordType()
 {
 	CRecordType* Rec = nullptr;
-	if(LexerGiveMeSymbolBistra() && !(Rec = RecordFields())) return nullptr;
+	if (LexerGiveMeSymbolBistra() && !(Rec = RecordFields())) return nullptr;
 	if (!Accept(endsy, false))
 	{
 		AddErrorAndSkip(13, { varsy, beginsy, ifsy, whilesy, withsy, endsy });
@@ -222,37 +221,37 @@ CRecordType* CParser::RecordFields(bool IsRightpar)
 	CRecordType* Rec = new CRecordType();
 	switch (m_pCurrentSymbol->SymbolCode)
 	{
-		case ident:
-			if (FixRecordPart(Rec))
-			{
-				if (Accept(casesy, false))
-				{
-					if (VariantRecordPart(Rec)) return Rec;
-					else return nullptr;
-				}
-				return Rec;
-			}
-			else 
-				if (IsRightpar && Accept(rightpar, false)) return Rec;
-				else
-				{
-					AddErrorAndSkip(18, { varsy, beginsy, ifsy, whilesy, withsy });
-					return nullptr;
-				}
-		case casesy:
-			if (LexerGiveMeSymbolBistra())
+	case ident:
+		if (FixRecordPart(Rec))
+		{
+			if (Accept(casesy, false))
 			{
 				if (VariantRecordPart(Rec)) return Rec;
 				else return nullptr;
 			}
+			return Rec;
+		}
+		else
+			if (IsRightpar && Accept(rightpar, false)) return Rec;
 			else
 			{
-				AddErrorAndSkip(18, {});
+				AddErrorAndSkip(18, { varsy, beginsy, ifsy, whilesy, withsy });
 				return nullptr;
 			}
-		default:
-			AddErrorAndSkip(18, { varsy, beginsy, ifsy, whilesy, withsy });
+	case casesy:
+		if (LexerGiveMeSymbolBistra())
+		{
+			if (VariantRecordPart(Rec)) return Rec;
+			else return nullptr;
+		}
+		else
+		{
+			AddErrorAndSkip(18, {});
 			return nullptr;
+		}
+	default:
+		AddErrorAndSkip(18, { varsy, beginsy, ifsy, whilesy, withsy });
+		return nullptr;
 	}
 }
 
@@ -266,7 +265,7 @@ bool CParser::FixRecordPart(CRecordType* Rec)
 		if (Accept(semicolon)) LexerGiveMeSymbolBistra();
 		else
 		{
-			if(Accept(endsy, false)) LexerGiveMeSymbolBistra();
+			if (Accept(endsy, false)) LexerGiveMeSymbolBistra();
 			else
 			{
 				AddErrorAndSkip(14, {});
@@ -355,7 +354,7 @@ bool CParser::VariantRecordPart(CRecordType* Rec)
 
 bool CParser::VariantList(CRecordType* Rec)
 {
-	while (Variant(Rec) 
+	while (Variant(Rec)
 		&& Accept(semicolon)
 		&& !Accept(endsy, false)
 		&& !Accept(varsy, false)
@@ -369,7 +368,7 @@ bool CParser::VariantList(CRecordType* Rec)
 		AddErrorAndSkip(14, { varsy, beginsy, ifsy, whilesy, withsy });
 	}
 	else if (Accept(endsy)) return true;
-		 else AddErrorAndSkip(13, { varsy, beginsy, ifsy, whilesy, withsy });
+	else AddErrorAndSkip(13, { varsy, beginsy, ifsy, whilesy, withsy });
 
 	return false;
 }
@@ -401,7 +400,7 @@ bool CParser::Variant(CRecordType* Rec)
 		}
 	else
 	{
-		if(!Accept(endsy, false)) AddErrorAndSkip(0, { varsy, beginsy, ifsy, whilesy, withsy });
+		if (!Accept(endsy, false)) AddErrorAndSkip(0, { varsy, beginsy, ifsy, whilesy, withsy });
 		return false;
 	}
 }
@@ -425,7 +424,7 @@ vector<CValue*> CParser::VariantLableList()
 	}
 
 	if (Accept(colon, false)) return Op;
-	else if(!Accept(endsy, false)) AddErrorAndSkip(5, { varsy, beginsy, ifsy, whilesy, withsy });
+	else if (!Accept(endsy, false)) AddErrorAndSkip(5, { varsy, beginsy, ifsy, whilesy, withsy });
 
 	Op.clear();
 	return Op;
@@ -434,12 +433,12 @@ vector<CValue*> CParser::VariantLableList()
 bool CParser::VariantLable()
 {
 	if ((UnsignedNumber()
-			|| Accept(charc, false)
-			|| Accept(stringc, false)
-			|| SignedNumber()))
+		|| Accept(charc, false)
+		|| Accept(stringc, false)
+		|| SignedNumber()))
 		return true;
 
-	if(!Accept(endsy, false)) AddErrorAndSkip(18, { varsy, beginsy, ifsy, whilesy, withsy });
+	if (!Accept(endsy, false)) AddErrorAndSkip(18, { varsy, beginsy, ifsy, whilesy, withsy });
 	return false;
 }
 
@@ -461,30 +460,31 @@ bool CParser::SignedNumber()
 bool CParser::VarBlock()
 {
 	while (LexerGiveMeSymbolBistra()
-			&& (!Accept(endsy, false)
+		&& (!Accept(endsy, false)
 			&& !Accept(beginsy, false)
 			&& !Accept(ifsy, false)
 			&& !Accept(whilesy, false)
 			&& !Accept(withsy, false)))
 	{
-		if (!OneTypeVar()) break;
+		if (!OneTypeVar())
+			AddErrorAndSkip(0, { semicolon, beginsy, ifsy, whilesy, withsy, endsy });
 	}
 	if (m_pCurrentSymbol)
 	{
 		switch (m_pCurrentSymbol->SymbolCode)
 		{
-			case beginsy:
-				if (LexerGiveMeSymbolBistra()) OperatorBlock();
-				else
-				{
-					AddErrorAndSkip(61, {});
-					return false;
-				}
-				break;
-			default:
-				AddErrorAndSkip(17, { beginsy, ifsy, whilesy, withsy, endsy });
-				OperatorBlock();
-				break;
+		case beginsy:
+			if (LexerGiveMeSymbolBistra()) OperatorBlock();
+			else
+			{
+				AddErrorAndSkip(61, {});
+				return false;
+			}
+			break;
+		default:
+			AddErrorAndSkip(17, { beginsy, ifsy, whilesy, withsy, endsy });
+			OperatorBlock();
+			break;
 		}
 	}
 	else
@@ -513,7 +513,7 @@ bool CParser::OneTypeVar()
 			else AddErrorAndSkip(14, { beginsy, ifsy, whilesy, withsy, endsy });
 		}
 		else AddErrorAndSkip(2, { beginsy, ifsy, whilesy, withsy, endsy });
-			
+
 	}
 	else AddErrorAndSkip(5, { beginsy, ifsy, whilesy, withsy, endsy });
 	return false;
@@ -529,16 +529,16 @@ bool CParser::CompositeOperator()
 	while (true)
 	{
 		IsSemicolonError = false;
-		Operator(); 
+		Operator();
 		if (Accept(endsy, false)) break;
 		if (!IsSemicolonError && !Accept(semicolon, false))
 		{
-			AddErrorAndSkip(14, { });
+			AddErrorAndSkip(14, {});
 			IsSemicolonError = true;
 		}
 		if (m_pCurrentSymbol == nullptr) break;
-		if(!IsSemicolonError) LexerGiveMeSymbolBistra();
-	} 
+		if (!IsSemicolonError) LexerGiveMeSymbolBistra();
+	}
 
 	if (Accept(endsy, false))
 	{
@@ -564,30 +564,30 @@ bool CParser::ComplexOperator()
 {
 	switch (m_pCurrentSymbol->SymbolCode)
 	{
-		case beginsy: 
-			LexerGiveMeSymbolBistra();
-			return CompositeOperator();
-		case ifsy: return ConditionOperator();
-		case whilesy: return CycleOperator();
-		case withsy: return WithOperator();
-		case elsesy: 
-		{
-			AddErrorAndSkip(56, { beginsy, ifsy, whilesy, withsy, endsy });
-			return false;
-		}
-		case endsy:
-		{
-			return false;
-		}
-		default:
-			AddErrorAndSkip(6, { semicolon, beginsy, ifsy, whilesy, withsy, endsy });
-			return false;
+	case beginsy:
+		LexerGiveMeSymbolBistra();
+		return CompositeOperator();
+	case ifsy: return ConditionOperator();
+	case whilesy: return CycleOperator();
+	case withsy: return WithOperator();
+	case elsesy:
+	{
+		AddErrorAndSkip(56, { beginsy, ifsy, whilesy, withsy, endsy });
+		return false;
+	}
+	case endsy:
+	{
+		return false;
+	}
+	default:
+		AddErrorAndSkip(6, { semicolon, beginsy, ifsy, whilesy, withsy, endsy });
+		return false;
 	}
 }
 
 bool CParser::ConditionOperator()
 {
-	if (Expression() && ! Accept(elsesy, false))
+	if (Expression() && !Accept(elsesy, false))
 		if (Accept(thensy, false))
 			if (LexerGiveMeSymbolBistra() && Operator())
 				if (Accept(elsesy, false))
@@ -610,7 +610,7 @@ bool CParser::ConditionOperator()
 	else
 	{
 		AddErrorAndSkip(0, { beginsy, ifsy, elsesy, thensy, whilesy, withsy, endsy });
-		if(Accept(thensy, false))
+		if (Accept(thensy, false))
 			if (LexerGiveMeSymbolBistra() && Operator())
 				if (Accept(elsesy, false))
 				{
@@ -691,12 +691,12 @@ bool CParser::WithOperator()
 bool CParser::RecordVarList()
 {
 	while (LexerGiveMeSymbolBistra() && Variable() && Accept(comma, false));
-	
+
 	if (!Accept(comma, false) && !Accept(dosy, false))
 	{
 		AddErrorAndSkip(20, {});
 		return false;
-	}	
+	}
 	return true;
 }
 
@@ -723,19 +723,19 @@ bool CParser::AssignOperator()
 
 bool CParser::MultOperation()
 {
-	return Accept(star, false) 
-		|| Accept(slash, false) 
-		|| Accept(divsy, false) 
-		|| Accept(modsy, false) 
+	return Accept(star, false)
+		|| Accept(slash, false)
+		|| Accept(divsy, false)
+		|| Accept(modsy, false)
 		|| Accept(andsy, false);
 }
 
 bool CParser::RelationshipOperation()
 {
-	return Accept(equalsy, false) 
-		|| Accept(greater, false) 
-		|| Accept(greaterequal, false) 
-		|| Accept(later, false) 
+	return Accept(equalsy, false)
+		|| Accept(greater, false)
+		|| Accept(greaterequal, false)
+		|| Accept(later, false)
 		|| Accept(laterequal, false)
 		|| Accept(insy, false)
 		|| Accept(latergreater, false);
@@ -762,11 +762,11 @@ CType* CParser::FullVariable(bool IsRecordField)
 	{
 		//а если это поле записи, то нада хранить стартовую, иначе в определениях не найдется
 		if (!IsRecordField)
-			if(CVar* Var = static_cast<CVar*> (Sem->CheckDescription(m_pCurrentSymbol, Lexer->GetCurrentStr(), utVar)))
+			if (CVar* Var = static_cast<CVar*> (Sem->CheckDescription(m_pCurrentSymbol, Lexer->GetCurrentStr(), utVar)))
 				Type = Var->GetType();
 			else Type = nullptr;
 			//if(IsRecordField) Sem->CheckRecordFields((CRecordType*) Type, m_pCurrentSymbol, Lexer->GetCurrentStr());
-		return Type;
+			return Type;
 	}
 	return nullptr;
 }
@@ -816,7 +816,7 @@ bool CParser::Multiplier()
 		else
 		{
 			if (Accept(rightpar, false)) return true;
-			AddErrorAndSkip(4, {semicolon, beginsy, ifsy, whilesy, withsy, endsy });
+			AddErrorAndSkip(4, { semicolon, beginsy, ifsy, whilesy, withsy, endsy });
 			return false;
 		}
 	}
@@ -847,9 +847,9 @@ bool CParser::SimpleExpression()
 	{
 		while (AddOperation())
 		{
-		 	if(!Term()) 
+			if (!Term())
 			{
-				AddErrorAndSkip(14, {semicolon, beginsy, ifsy, whilesy, withsy, endsy });
+				AddErrorAndSkip(14, { semicolon, beginsy, ifsy, whilesy, withsy, endsy });
 				return false;
 			}
 		}
