@@ -76,12 +76,14 @@ CType * CSemantic::Cast(CType* One, CType* Two, bool IsAssign)
 		|| One->TypeName == "char" && Two->TypeName == "char"
 		|| One->TypeName == "string" && Two->TypeName == "char"
 		|| One->TypeName == "string" && Two->TypeName == "string"
-		|| One->TypeName == "real" && Two->TypeName == "integer") return One;
+		|| One->TypeName == "real" && Two->TypeName == "integer") 
+		return One;
 
 	if (!IsAssign)
 	{
 		if (One->TypeName == "integer" && Two->TypeName == "real"
-			|| One->TypeName == "char" && Two->TypeName == "string") return Two;
+			|| One->TypeName == "char" && Two->TypeName == "string") 
+			return Two;
 	}
 
 	return nullptr;

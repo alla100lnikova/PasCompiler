@@ -787,17 +787,19 @@ CType* CParser::VariableRecordField()
 CType* CParser::Term()
 {
 	CType* Type = nullptr;
-	while (LexerGiveMeSymbolBistra() && (Type = Multiplier()))
+	while (m_pCurrentSymbol && (Type = Multiplier()))
 	{
 		string BaseTypeName = Sem->GetBaseType(Type)->TypeName;
 		if (MultBoolOperation())
 		{
 			if (BaseTypeName != "boolean") AddErrorAndSkip(210, {});
+			LexerGiveMeSymbolBistra();
 			continue;
 		}
 		if (MultIntOperation())
 		{
 			if (BaseTypeName != "integer") AddErrorAndSkip(212, {});
+			LexerGiveMeSymbolBistra();
 			continue;
 		}
 		if (MultOperation())
@@ -807,6 +809,7 @@ CType* CParser::Term()
 				|| BaseTypeName == "string" 
 				|| BaseTypeName == "") 
 				AddErrorAndSkip(213, {});
+			LexerGiveMeSymbolBistra();
 			continue;
 		}
 		break;
@@ -850,7 +853,7 @@ CType* CParser::Expression()
 		{
 			OneType = Sem->Cast(OneType, SimpleExpression());
 			if (!OneType) AddErrorAndSkip(186, {});
-			return OneType;
+			return Sem->GetTypeFromMap("boolean");
 		}
 		else return OneType;
 	else return nullptr;
@@ -860,6 +863,7 @@ CType* CParser::SimpleExpression()
 {
 	CType* Type;
 	bool IsSign = false;
+	LexerGiveMeSymbolBistra();
 	if (IsSign = Sign()) LexerGiveMeSymbolBistra();
 	if (Type = Term())
 	{
@@ -867,9 +871,10 @@ CType* CParser::SimpleExpression()
 		if (IsSign && Type && Type->TypeName != "real" && Type->TypeName != "integer")
 			AddErrorAndSkip(184, {});
 
-		bool IsBoolOp;
+		bool IsBoolOp = false;
 		while (AddOperation() ||(IsBoolOp = AddBoolOperation()))
 		{
+			LexerGiveMeSymbolBistra();
 			Type = Sem->Cast(Type, Term());
 			if (IsBoolOp && Type && Type->TypeName != "boolean")
 			{

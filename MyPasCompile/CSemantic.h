@@ -92,4 +92,5 @@ public:
 	CType* GetType(CSymbol* Symbol);
 	CType* GetBaseType(CType* Type);
 	CType* Cast(CType* One, CType* Two, bool IsAssign = false);
+	CType* GetTypeFromMap(string Name) { return (CType*) IdentMap[Name]; }
 };
