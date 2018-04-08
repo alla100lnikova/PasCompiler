@@ -3,7 +3,6 @@
 #include <algorithm>
 #include "Constants.h"
 #include <vector>
-
 using namespace std;
 
 class CIdent

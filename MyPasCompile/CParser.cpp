@@ -166,7 +166,6 @@ bool CParser::TypeDescription()
 	if (Accept(ident, false))
 	{
 		Sem->CheckScalarType(m_pCurrentSymbol, Lexer->GetCurrentStr());
-		Sem->SetOldSym(m_pCurrentSymbol);//???
 		if (Accept(equalsy))
 		{
 			if (LexerGiveMeSymbolBistra()) return Type() != nullptr;
@@ -317,7 +316,7 @@ bool CParser::VariantRecordPart(CRecordType* Rec)
 		if (Accept(colon))
 			if (Accept(ident))
 			{
-				Sem->AddFlagVarPart(Rec, m_pCurrentSymbol);
+				Sem->AddFlagVarPart(Rec, m_pCurrentSymbol, Lexer->GetCurrentStr());
 				if (Accept(ofsy))
 					return VariantList(Rec);
 				else
@@ -442,9 +441,11 @@ bool CParser::VariantLable()
 	return false;
 }
 
-bool CParser::UnsignedNumber()
+CType* CParser::UnsignedNumber()
 {
-	return (Accept(intc, false) || Accept(floatc, false));
+	if(m_pCurrentSymbol->SymbolCode == intc || m_pCurrentSymbol->SymbolCode == floatc)
+		return Sem->GetType(m_pCurrentSymbol);
+	return nullptr;
 }
 
 bool CParser::Sign()
@@ -452,9 +453,10 @@ bool CParser::Sign()
 	return Accept(plussy, false) || Accept(minussy, false);
 }
 
-bool CParser::SignedNumber()
+CType* CParser::SignedNumber()
 {
-	return (Sign() && LexerGiveMeSymbolBistra() && UnsignedNumber());
+	if (Sign() && LexerGiveMeSymbolBistra()) return UnsignedNumber();
+	return nullptr;
 }
 
 bool CParser::VarBlock()
@@ -587,104 +589,77 @@ bool CParser::ComplexOperator()
 
 bool CParser::ConditionOperator()
 {
-	if (Expression() && !Accept(elsesy, false))
-		if (Accept(thensy, false))
-			if (LexerGiveMeSymbolBistra() && Operator())
-				if (Accept(elsesy, false))
-				{
-					LexerGiveMeSymbolBistra();
-					return Operator();
-				}
-				else return true;
-			else return false;
-		else
-		{
-			AddErrorAndSkip(52, { beginsy, ifsy, elsesy, whilesy, withsy, endsy });
+	CType* Type;
+	if ((Type = Expression()) && !Accept(elsesy, false))
+	{
+		if ((Type = Sem->GetBaseType(Type)) && Type->TypeName != "boolean")
+			AddErrorAndSkip(144, {});
+	}
+	else
+	{
+		AddErrorAndSkip(0, { beginsy, ifsy, elsesy, thensy, whilesy, withsy, endsy });
+	}
+
+	if (Accept(thensy, false))
+		if (LexerGiveMeSymbolBistra() && Operator())
 			if (Accept(elsesy, false))
 			{
 				LexerGiveMeSymbolBistra();
 				return Operator();
 			}
-			return false;
-		}
+			else return true;
+		else return false;
 	else
 	{
-		AddErrorAndSkip(0, { beginsy, ifsy, elsesy, thensy, whilesy, withsy, endsy });
-		if (Accept(thensy, false))
-			if (LexerGiveMeSymbolBistra() && Operator())
-				if (Accept(elsesy, false))
-				{
-					LexerGiveMeSymbolBistra();
-					return Operator();
-				}
-				else return true;
-			else return false;
-		else
+		AddErrorAndSkip(52, { beginsy, ifsy, elsesy, whilesy, withsy, endsy });
+		if (Accept(elsesy, false))
 		{
-			AddErrorAndSkip(52, { beginsy, ifsy, elsesy, whilesy, withsy, endsy });
-			if (Accept(elsesy, false)) return Operator();
-			else return false;
+			LexerGiveMeSymbolBistra();
+			return Operator();
 		}
+		return false;
 	}
 }
 
 bool CParser::CycleOperator()
 {
-	if (Expression())
+	CType* Type;
+	if (Type = Expression())
 	{
-		if (Accept(dosy, false))
-		{
-			LexerGiveMeSymbolBistra();
-			return Operator();
-		}
-		else
-		{
-			AddErrorAndSkip(54, {});
-			return Operator();
-		}
+		if ((Type = Sem->GetBaseType(Type)) && Type->TypeName != "boolean")
+			AddErrorAndSkip(144, {});
 	}
 	else
 	{
 		AddErrorAndSkip(0, { beginsy, ifsy, dosy, whilesy, withsy, endsy });
-		if (Accept(dosy, false))
-		{
-			LexerGiveMeSymbolBistra();
-			return Operator();
-		}
-		else
-		{
-			AddErrorAndSkip(54, {});
-			return Operator();
-		}
+	}
+
+	if (Accept(dosy, false))
+	{
+		LexerGiveMeSymbolBistra();
+		return Operator();
+	}
+	else
+	{
+		AddErrorAndSkip(54, {});
+		return Operator();
 	}
 }
 
 bool CParser::WithOperator()
 {
-	if (RecordVarList())
-		if (Accept(dosy, false))
-		{
-			LexerGiveMeSymbolBistra();
-			return Operator();
-		}
-		else
-		{
-			AddErrorAndSkip(54, {});
-			return Operator();
-		}
+	if (!RecordVarList())
+		AddErrorAndSkip(0, { beginsy, ifsy, dosy, whilesy, withsy, endsy });
+
+	if (Accept(dosy, false))
+	{
+		LexerGiveMeSymbolBistra();
+		return Operator();
+	}
 	else
 	{
-		AddErrorAndSkip(0, { beginsy, ifsy, dosy, whilesy, withsy, endsy });
-		if (Accept(dosy, false))
-		{
-			LexerGiveMeSymbolBistra();
-			return Operator();
-		}
-		else
-		{
-			AddErrorAndSkip(54, {});
-			return Operator();
-		}
+		AddErrorAndSkip(54, {});
+		return Operator();
 	}
 }
 
@@ -713,9 +688,15 @@ bool CParser::SimpleOperator()
 
 bool CParser::AssignOperator()
 {
-	if (Variable())
+	CType* TypeVar;
+	if (TypeVar = Variable())
 		if (Accept(assign, false))
-			return Expression();
+		{
+			CType* TypeExp = Expression();
+			if (!Sem->Cast(TypeVar, TypeExp, true))
+				AddErrorAndSkip(145, {});
+			return TypeExp != nullptr;
+		}
 		else AddErrorAndSkip(51, { beginsy, ifsy, whilesy, withsy, endsy });
 	else AddErrorAndSkip(2, { beginsy, ifsy, whilesy, withsy, endsy });
 	return false;
@@ -724,10 +705,18 @@ bool CParser::AssignOperator()
 bool CParser::MultOperation()
 {
 	return Accept(star, false)
-		|| Accept(slash, false)
-		|| Accept(divsy, false)
-		|| Accept(modsy, false)
-		|| Accept(andsy, false);
+		|| Accept(slash, false);
+}
+
+bool CParser::MultIntOperation()
+{
+	return Accept(divsy, false)
+		|| Accept(modsy, false);
+}
+
+bool CParser::MultBoolOperation()
+{
+	return Accept(andsy, false);
 }
 
 bool CParser::RelationshipOperation()
@@ -743,16 +732,19 @@ bool CParser::RelationshipOperation()
 
 bool CParser::AddOperation()
 {
-	return Sign() || Accept(orsy, false);
+	return Sign();
 }
 
-bool CParser::Constant()
+bool CParser::AddBoolOperation()
 {
-	return UnsignedNumber()
-		|| Accept(boolc, false)
-		|| Accept(charc, false)
-		|| Accept(stringc, false)
-		|| Accept(nilsy, false);
+	return Accept(orsy, false);
+}
+
+CType* CParser::Constant()
+{
+	if(m_pCurrentSymbol->SymbolCode != ident)
+		return Sem->GetType(m_pCurrentSymbol);
+	return nullptr;
 }
 
 CType* CParser::FullVariable(bool IsRecordField)
@@ -776,13 +768,11 @@ CType* CParser::Variable(bool IsRecordField)
 	CType* Type;
 	if (Type = FullVariable(IsRecordField))
 	{
-		Sem->SetOldSym(m_pCurrentSymbol);
 		if (Accept(point))
 		{
-			Sem->SetCurrentRecord(m_pCurrentSymbol, true);
 			Type = VariableRecordField();
 		}
-		else return Type;
+		return Type;
 	}
 	else return nullptr;
 }
@@ -794,66 +784,111 @@ CType* CParser::VariableRecordField()
 	return Type;
 }
 
-bool CParser::Term()
+CType* CParser::Term()
 {
-	while (LexerGiveMeSymbolBistra() && Multiplier())
+	CType* Type = nullptr;
+	while (LexerGiveMeSymbolBistra() && (Type = Multiplier()))
 	{
-		if (MultOperation()) continue;
+		string BaseTypeName = Sem->GetBaseType(Type)->TypeName;
+		if (MultBoolOperation())
+		{
+			if (BaseTypeName != "boolean") AddErrorAndSkip(210, {});
+			continue;
+		}
+		if (MultIntOperation())
+		{
+			if (BaseTypeName != "integer") AddErrorAndSkip(212, {});
+			continue;
+		}
+		if (MultOperation())
+		{
+			if (BaseTypeName == "char" 
+				|| BaseTypeName == "boolean" 
+				|| BaseTypeName == "string" 
+				|| BaseTypeName == "") 
+				AddErrorAndSkip(213, {});
+			continue;
+		}
 		break;
 	}
-	return true;
+	return Type;
 }
 
-bool CParser::Multiplier()
+CType* CParser::Multiplier()
 {
+	CType* Type;
 	if (Accept(leftpar, false))
 	{
-		if (Expression() && Accept(rightpar, false))
+		if ((Type = Expression()) && Accept(rightpar, false))
 		{
 			LexerGiveMeSymbolBistra();
-			return true;
+			return Type;
 		}
 		else
 		{
-			if (Accept(rightpar, false)) return true;
+			if (Accept(rightpar, false)) return Type;
 			AddErrorAndSkip(4, { semicolon, beginsy, ifsy, whilesy, withsy, endsy });
 			return false;
 		}
 	}
 	if (Accept(notsy, false)) return Multiplier();
-	if (Constant())
+	if (Type = Constant())
 	{
 		LexerGiveMeSymbolBistra();
-		return true;
+		return Type;
 	}
 	if (Accept(ident, false)) return Variable();
 
-	return false;
+	return nullptr;
 }
 
-bool CParser::Expression()
+CType* CParser::Expression()
 {
-	if (SimpleExpression())
+	CType* OneType;
+	if (OneType = SimpleExpression())
 		if (RelationshipOperation())
-			return SimpleExpression();
-		else return true;
-	else return false;
+		{
+			OneType = Sem->Cast(OneType, SimpleExpression());
+			if (!OneType) AddErrorAndSkip(186, {});
+			return OneType;
+		}
+		else return OneType;
+	else return nullptr;
 }
 
-bool CParser::SimpleExpression()
+CType* CParser::SimpleExpression()
 {
-	if (Sign()) LexerGiveMeSymbolBistra();
-	if (Term())
+	CType* Type;
+	bool IsSign = false;
+	if (IsSign = Sign()) LexerGiveMeSymbolBistra();
+	if (Type = Term())
 	{
-		while (AddOperation())
+		Type = Sem->GetBaseType(Type);
+		if (IsSign && Type && Type->TypeName != "real" && Type->TypeName != "integer")
+			AddErrorAndSkip(184, {});
+
+		bool IsBoolOp;
+		while (AddOperation() ||(IsBoolOp = AddBoolOperation()))
 		{
-			if (!Term())
+			Type = Sem->Cast(Type, Term());
+			if (IsBoolOp && Type && Type->TypeName != "boolean")
 			{
-				AddErrorAndSkip(14, { semicolon, beginsy, ifsy, whilesy, withsy, endsy });
-				return false;
+				AddErrorAndSkip(210, {});
+				continue;
 			}
+
+			if (!Type)
+			{
+				AddErrorAndSkip(211, {});
+			}			
+
+			//if (!Type)
+			//{
+			//	AddErrorAndSkip(14, { semicolon, beginsy, ifsy, whilesy, withsy, endsy });
+			//	return nullptr;
+			//}
 		}
-		return true;
+		return Type;
 	}
-	return false;
+	return nullptr;
 }

@@ -6,17 +6,8 @@ class CSemantic
 {
 private:
 	vector<string> m_TempVar;
-	vector<CSymbol*> m_OperandExpression;
-	CRecordType* m_CurrentRecord;
-	CSymbol* m_OldSym;
 
-	CType* GetIdentType(CSymbol* Ident)
-	{
-		if (IdentMap.find(Ident->GetSymbol()) == IdentMap.end()) return nullptr;
-		if (IdentMap[Ident->GetSymbol()]->GetUseType() != utVar) return nullptr;
-
-		return static_cast<CType*> (IdentMap[Ident->GetSymbol()]);
-	}
+	CType* GetIdentType(CSymbol* Ident);
 
 	bool AddOp(eOperator op)
 	{
@@ -46,11 +37,13 @@ private:
 		return  op == andsy || op == orsy || op == notsy;
 	}
 
-	bool Constant(eOperator op)
+	bool IsConstant(eOperator op)
 	{
 		return op == intc
 			|| op == floatc
-			|| op == nilsy;
+			|| op == nilsy
+			|| op == charc
+			|| op == stringc;
 	}
 
 public:
@@ -58,7 +51,7 @@ public:
 	~CSemantic();
 	map<string, CIdent*> IdentMap;
 
-	void SetOldSym(CSymbol* Old) { m_OldSym = Old; }
+//	void SetOldSym(CSymbol* Old) { m_OldSym = Old; }
 	void ClearTempVar() { m_TempVar.clear(); }
 
 	//Добавление типов в мапу / выдача ошибки о повторном
@@ -87,7 +80,7 @@ public:
 	void CheckExpressionSize(CSymbol* Symbol, int StrNum);
 	//Поиск переменной в мапе
 	CIdent* CheckDescription(CSymbol* Symbol, int StrNum, eUseType UseType);
-	void AddFlagVarPart(CRecordType* Rec, CSymbol* Symdol);
+	void AddFlagVarPart(CRecordType* Rec, CSymbol* Symdol, int StrNum);
 
 	//Временный сбор операндов, чтоб проверить типы
 	void AddOperand(CSymbol* Symbol);
@@ -96,4 +89,7 @@ public:
 	void AddCheckRecord(CSymbol* Symbol, int StrNum);
 	void SetCurrentRecord(CSymbol* Symbol, bool IsCheckField = false);
 	void SetProgName(CSymbol* Symbol, int StrNum);
+	CType* GetType(CSymbol* Symbol);
+	CType* GetBaseType(CType* Type);
+	CType* Cast(CType* One, CType* Two, bool IsAssign = false);
 };

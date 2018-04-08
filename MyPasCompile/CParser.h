@@ -33,10 +33,10 @@ public:
 	//Блок программы
 	bool ProgramBlock();
 	//Число без знака
-	bool UnsignedNumber();
+	CType* UnsignedNumber();
 	//Знак
 	bool Sign();
-	bool SignedNumber();
+	CType* SignedNumber();
 	//Раздел описания типов
 	bool TypesBlock();
 	//Описание типа
@@ -78,18 +78,21 @@ public:
 	//Переменная - поле записи
 	CType* VariableRecordField();
 	//Выражение
-	bool Expression();
+	CType* Expression();
 	//Операция отношения
 	bool RelationshipOperation();
-	bool SimpleExpression();
+	CType* SimpleExpression();
 	bool AddOperation();
+	bool AddBoolOperation();
 	//Слагаемое
-	bool Term();
+	CType* Term();
 	bool MultOperation();
+	bool MultIntOperation();
+	bool MultBoolOperation();
 	//Множитель
-	bool Multiplier();
+	CType* Multiplier();
 	//Константа в выражении - число, переменная и т.п
-	bool Constant();
+	CType* Constant();
 	bool CycleOperator();
 	bool ConditionOperator();
 	//Оператор присоединения
