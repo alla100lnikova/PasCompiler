@@ -68,6 +68,7 @@ CType * CSemantic::Cast(CType* One, CType* Two, bool IsAssign)
 {
 	One = GetBaseType(One);
 	Two = GetBaseType(Two);
+	if (!One && !Two) return nullptr;
 	if (!One && Two) return Two;
 	if (One && !Two) return One;
 	if (One->TypeName == "integer" && Two->TypeName == "integer"
@@ -100,10 +101,13 @@ CIdent* CSemantic::CheckDescription(CSymbol* Symbol, int StrNum, eUseType UseTyp
 	}
 	else
 	{
-		if (IdentMap[Symbol->GetSymbol()]->GetUseType() != UseType)
+		if (CIdent* Id = IdentMap[Symbol->GetSymbol()])
 		{
-			Constants::AddError(100, { StrNum, 0 });
-			return nullptr;
+			if (Id->GetUseType() != UseType)
+			{
+				Constants::AddError(100, { StrNum, 0 });
+				return nullptr;
+			}
 		}
 	}
 	return IdentMap[Symbol->GetSymbol()];

@@ -766,15 +766,12 @@ CType* CParser::FullVariable(bool IsRecordField)
 CType* CParser::Variable(bool IsRecordField)
 {
 	CType* Type;
-	if (Type = FullVariable(IsRecordField))
+	Type = FullVariable(IsRecordField);
+	if (Accept(point))
 	{
-		if (Accept(point))
-		{
-			Type = VariableRecordField();
-		}
-		return Type;
+		Type = VariableRecordField();
 	}
-	else return nullptr;
+	return Type;
 }
 
 CType* CParser::VariableRecordField()
@@ -787,9 +784,11 @@ CType* CParser::VariableRecordField()
 CType* CParser::Term()
 {
 	CType* Type = nullptr;
-	while (m_pCurrentSymbol && (Type = Multiplier()))
+	while (m_pCurrentSymbol)
 	{
-		string BaseTypeName = Sem->GetBaseType(Type)->TypeName;
+		Type = Multiplier();
+		CType* BaseType = Sem->GetBaseType(Type);
+		string BaseTypeName = BaseType? BaseType->TypeName : "";
 		if (MultBoolOperation())
 		{
 			if (BaseTypeName != "boolean") AddErrorAndSkip(210, {});
@@ -822,27 +821,24 @@ CType* CParser::Multiplier()
 	CType* Type;
 	if (Accept(leftpar, false))
 	{
-		if ((Type = Expression()) && Accept(rightpar, false))
+		Type = Expression();
+		if (Accept(rightpar, false))
 		{
 			LexerGiveMeSymbolBistra();
 			return Type;
 		}
 		else
 		{
-			if (Accept(rightpar, false)) return Type;
 			AddErrorAndSkip(4, { semicolon, beginsy, ifsy, whilesy, withsy, endsy });
 			return false;
 		}
 	}
 	if (Accept(notsy, false)) return Multiplier();
-	if (Type = Constant())
-	{
-		LexerGiveMeSymbolBistra();
-		return Type;
-	}
 	if (Accept(ident, false)) return Variable();
 
-	return nullptr;
+	Type = Constant();
+	LexerGiveMeSymbolBistra();
+	return Type;
 }
 
 CType* CParser::Expression()
@@ -865,35 +861,32 @@ CType* CParser::SimpleExpression()
 	bool IsSign = false;
 	LexerGiveMeSymbolBistra();
 	if (IsSign = Sign()) LexerGiveMeSymbolBistra();
-	if (Type = Term())
+	Type = Term();
+	Type = Sem->GetBaseType(Type);
+	if (IsSign && Type && Type->TypeName != "real" && Type->TypeName != "integer")
+		AddErrorAndSkip(184, {});
+
+	bool IsBoolOp = false;
+	while (AddOperation() || (IsBoolOp = AddBoolOperation()))
 	{
-		Type = Sem->GetBaseType(Type);
-		if (IsSign && Type && Type->TypeName != "real" && Type->TypeName != "integer")
-			AddErrorAndSkip(184, {});
-
-		bool IsBoolOp = false;
-		while (AddOperation() ||(IsBoolOp = AddBoolOperation()))
+		LexerGiveMeSymbolBistra();
+		Type = Sem->Cast(Type, Term());
+		if (IsBoolOp && Type && Type->TypeName != "boolean")
 		{
-			LexerGiveMeSymbolBistra();
-			Type = Sem->Cast(Type, Term());
-			if (IsBoolOp && Type && Type->TypeName != "boolean")
-			{
-				AddErrorAndSkip(210, {});
-				continue;
-			}
-
-			if (!Type)
-			{
-				AddErrorAndSkip(211, {});
-			}			
-
-			//if (!Type)
-			//{
-			//	AddErrorAndSkip(14, { semicolon, beginsy, ifsy, whilesy, withsy, endsy });
-			//	return nullptr;
-			//}
+			AddErrorAndSkip(210, {});
+			continue;
 		}
-		return Type;
+
+		if (!Type)
+		{
+			AddErrorAndSkip(211, {});
+		}
+
+		//if (!Type)
+		//{
+		//	AddErrorAndSkip(14, { semicolon, beginsy, ifsy, whilesy, withsy, endsy });
+		//	return nullptr;
+		//}
 	}
-	return nullptr;
+	return Type;
 }
