@@ -578,18 +578,8 @@ bool CParser::ComplexOperator()
 	case ifsy: return ConditionOperator();
 	case whilesy: return CycleOperator();
 	case withsy: return WithOperator();
-	case elsesy:
-	{
-		AddErrorAndSkip(56, { beginsy, ifsy, whilesy, withsy, endsy });
-		return false;
-	}
-	case endsy:
-	{
-		return false;
-	}
-	default:
-		AddErrorAndSkip(6, { semicolon, beginsy, ifsy, whilesy, withsy, endsy });
-		return false;
+	default:	
+		return true;
 	}
 }
 

@@ -47,13 +47,16 @@ eCharType CSymbol::GetCharType(char Char)
 
 char CSymbol::GetNextChar(CharPosition& CurrentPosition, vector<string>& ProgramText)
 {
+	if (CurrentPosition.CharNumber >= ProgramText[CurrentPosition.LineNumber].size())
+	{
+		CurrentPosition.LineNumber++;
+	}
+
 	if (CurrentPosition.LineNumber < ProgramText.size())
 	{
 		if (++CurrentPosition.CharNumber >= ProgramText[CurrentPosition.LineNumber].size())
 		{
-			CurrentPosition.LineNumber++;
-			CurrentPosition.CharNumber = -1;	
-
+			CurrentPosition.CharNumber = -1;
 			return '\n'; 
 		}
 		return ProgramText.at(CurrentPosition.LineNumber).at(CurrentPosition.CharNumber);
@@ -220,16 +223,16 @@ CSymbol* CValueSymbol::ScanSymbol(CharPosition& CurrentPosition, vector<string>&
 	else
 	{
 		m_SymbolStr += GetStrSymbol(CurrentPosition, ProgramText, false);
-		CurrentChar = CurrentPosition.CharNumber == -1 
-			? (CurrentChar = GetNextChar(CurrentPosition, ProgramText))
-			: ProgramText.at(CurrentPosition.LineNumber).at(CurrentPosition.CharNumber);
+		CurrentChar = CurrentPosition.CharNumber != -1 
+			? ProgramText.at(CurrentPosition.LineNumber).at(CurrentPosition.CharNumber)
+			: '\n';
 
 		if (CurrentPosition.LineNumber >= ProgramText.size())
 		{
 			return nullptr;
 		}
 
-		if (CurrentChar != '.' && CurrentChar != 'E' && CurrentChar != 'e')
+		if (CurrentChar == '\n' || (CurrentChar != '.' && CurrentChar != 'E' && CurrentChar != 'e'))
 		{
 			int Value = atoi(m_SymbolStr.c_str());
 			if (Value > MAXINTPAS)
@@ -250,14 +253,14 @@ CSymbol* CValueSymbol::ScanSymbol(CharPosition& CurrentPosition, vector<string>&
 				double Value = atof(m_SymbolStr.c_str());
 				if (Value > MAXREALPAS)
 				{
-					Constants::AddError( 207, CurrentPosition );
+					Constants::AddError(207, CurrentPosition);
 					SymbolCode = error;
 				}
 				else
 				{
 					if (Value < MINREALPAS)
 					{
-						Constants::AddError( 206, CurrentPosition );
+						Constants::AddError(206, CurrentPosition);
 						SymbolCode = error;
 					}
 					else
