@@ -55,7 +55,7 @@ public:
 	void ClearTempVar() { m_TempVar.clear(); }
 
 	//Добавление типов в мапу / выдача ошибки о повторном
-	void CheckScalarType(CSymbol* Symbol, int StrNum);
+	void CheckScalarType(CSymbol* Symbol, CType* BaseType, int StrNum);
 	//Проставление типа переменных /добавление их всех в мапу / ошибка о неописанном типе / повторное описание
 	void SetVarsType(CSymbol* TypeName, int StrNum, bool IsRecordFields = false);
 	void SetRecFieldType(CType* Type, vector<string> Vars, CRecordType* Rec, int StrNum);

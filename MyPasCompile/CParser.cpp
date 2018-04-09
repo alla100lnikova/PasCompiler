@@ -165,10 +165,15 @@ bool CParser::TypeDescription()
 {
 	if (Accept(ident, false))
 	{
-		Sem->CheckScalarType(m_pCurrentSymbol, Lexer->GetCurrentStr());
+		CSymbol* TypeSymbol = m_pCurrentSymbol;
 		if (Accept(equalsy))
 		{
-			if (LexerGiveMeSymbolBistra()) return Type() != nullptr;
+			if (LexerGiveMeSymbolBistra())
+			{
+				CType* BaseType = Type();
+				Sem->CheckScalarType(TypeSymbol, BaseType, Lexer->GetCurrentStr());
+				return BaseType != nullptr;
+			}
 			else
 			{
 				AddErrorAndSkip(18, {});
@@ -549,6 +554,7 @@ bool CParser::CompositeOperator()
 		{
 			if (Accept(elsesy, false)) return true;
 			if (Accept(point, false)) return true;
+			if (Accept(endsy, false)) return true;
 
 			IsSemicolonError = true;
 			AddErrorAndSkip(14, { beginsy, ifsy, whilesy, withsy, endsy });
@@ -590,10 +596,14 @@ bool CParser::ComplexOperator()
 bool CParser::ConditionOperator()
 {
 	CType* Type;
-	if ((Type = Expression()) && !Accept(elsesy, false))
+	if (!Accept(elsesy, false))
 	{
-		if ((Type = Sem->GetBaseType(Type)) && Type->TypeName != "boolean")
+		Type = Expression();
+		if (!(Type = Sem->GetBaseType(Type)))
 			AddErrorAndSkip(144, {});
+		else
+			if(Type->TypeName != "boolean")
+				AddErrorAndSkip(144, {});
 	}
 	else
 	{
@@ -611,7 +621,8 @@ bool CParser::ConditionOperator()
 		else return false;
 	else
 	{
-		AddErrorAndSkip(52, { beginsy, ifsy, elsesy, whilesy, withsy, endsy });
+		AddErrorAndSkip(52, { beginsy, elsesy, whilesy, withsy, endsy });
+		Operator();
 		if (Accept(elsesy, false))
 		{
 			LexerGiveMeSymbolBistra();
@@ -624,15 +635,12 @@ bool CParser::ConditionOperator()
 bool CParser::CycleOperator()
 {
 	CType* Type;
-	if (Type = Expression())
-	{
-		if ((Type = Sem->GetBaseType(Type)) && Type->TypeName != "boolean")
-			AddErrorAndSkip(144, {});
-	}
+	Type = Expression();
+	if (!(Type = Sem->GetBaseType(Type)))
+		AddErrorAndSkip(144, {});
 	else
-	{
-		AddErrorAndSkip(0, { beginsy, ifsy, dosy, whilesy, withsy, endsy });
-	}
+		if (Type->TypeName != "boolean")
+			AddErrorAndSkip(144, {});
 
 	if (Accept(dosy, false))
 	{

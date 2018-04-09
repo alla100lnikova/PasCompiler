@@ -19,7 +19,8 @@ private:
 public:
 	CLexer(vector<string> ProgramText);
 	CSymbol* GetNextSymbol();
-	int GetCurrentStr() { return m_CurrentPosition.LineNumber; }
+	int GetCurrentStr() 
+	{ return m_CurrentPosition.LineNumber; }
 
 	void Print();
 };

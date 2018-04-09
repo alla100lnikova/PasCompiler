@@ -4,11 +4,11 @@ CSemantic::CSemantic()
 {
 	IdentMap = 
 	{
-		{ "integer", new CType("integer") },
-		{ "real", new CType("real") },
-		{ "boolean", new CType("boolean") },
-		{ "char", new CType("char") },
-		{ "string", new CType("string") }
+		{ "integer", new CType("integer", "") },
+		{ "real", new CType("real", "") },
+		{ "boolean", new CType("boolean", "") },
+		{ "char", new CType("char", "") },
+		{ "string", new CType("string", "") }
 	};
 }
 
@@ -48,18 +48,19 @@ CType* CSemantic::GetType(CSymbol* Symbol)
 CType * CSemantic::GetBaseType(CType* Type)
 {
 	if (!Type) return nullptr;
-	CType* BaseType; 
 	string TypeName = Type->TypeName;
-	do
-	{
-		BaseType = static_cast<CType*> (IdentMap[TypeName]);
-		TypeName = BaseType ? BaseType->TypeName : "";
-	} while (TypeName != "integer"
+	CType* BaseType = (CType*)IdentMap[TypeName]; 
+	while (BaseType 
+		&& TypeName != "integer"
 		&& TypeName != "real"
 		&& TypeName != "char"
 		&& TypeName != "string"
 		&& TypeName != "boolean"
-		&& TypeName != "");
+		&& TypeName != "")
+	{
+		BaseType = static_cast<CType*> (IdentMap[BaseType->BaseTypeName]);
+		TypeName = BaseType ? BaseType->BaseTypeName : "";
+	} 
 
 	return BaseType;
 }
@@ -216,7 +217,7 @@ void CSemantic::CheckRelatOperandType(CSymbol* Symbol, int StrNum)
 	if (!Symbol) return;
 }
 
-void CSemantic::CheckScalarType(CSymbol* Symbol, int StrNum)
+void CSemantic::CheckScalarType(CSymbol* Symbol, CType* BaseType, int StrNum)
 {
 	if (!Symbol) return;
 	if (IdentMap.find(Symbol->GetSymbol()) != IdentMap.end())
@@ -225,7 +226,8 @@ void CSemantic::CheckScalarType(CSymbol* Symbol, int StrNum)
 	}
 	else
 	{
-		CType* Type = new CType(Symbol->GetSymbol());
+		string BaseTypeName = BaseType ? BaseType->TypeName : "";
+		CType* Type = new CType(Symbol->GetSymbol(), BaseTypeName);
 		IdentMap.insert({ Symbol->GetSymbol(), Type });	
 	}
 }

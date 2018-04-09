@@ -23,8 +23,9 @@ protected:
 
 public:
 	eCustomType GetCustType() { return m_Type; }
-	CType(string TypeName, eCustomType Type = tScalar);
+	CType(string TypeName, string BaseType, eCustomType Type = tScalar);
 	string TypeName;
+	string BaseTypeName;
 	~CType() {}
 
 };
