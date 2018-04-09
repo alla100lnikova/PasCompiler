@@ -113,53 +113,6 @@ CIdent* CSemantic::CheckDescription(CSymbol* Symbol, int StrNum, eUseType UseTyp
 	}
 	return IdentMap[Symbol->GetSymbol()];
 }
-//
-//void CSemantic::CheckAddOperandType(CSymbol* Symbol, int StrNum)
-//{
-//	if (!Symbol) return;
-//	for (auto op : m_OperandExpression)
-//	{
-//		if (!Constant(op->SymbolCode) || BoolOperation(op->SymbolCode) || RelationshipOperation(op->SymbolCode))
-//		{
-//			Constants::AddError(211, { StrNum, 0 });
-//			break;
-//		}
-//		//if(GetIdentType(op)->
-//	}
-//}
-
-void CSemantic::CheckAssignType(CSymbol* Symbol, int StrNum)
-{
-	//if (!Symbol || !m_OldSym) return;
-	////не забыть, что может быть имя поля записи!
-	//if (IdentMap.find(m_OldSym->GetSymbol()) == IdentMap.end()) return;
-	////CType* Type = IdentMap[m_OldSym->GetSymbol()];
-
-
-
-	/*for (auto op : m_OperandExpression)
-	{
-		if (!Constant(op->SymbolCode) || BoolOperation(op->SymbolCode) || RelationshipOperation(op->SymbolCode))
-		{
-			Constants::AddError(145, { StrNum, 0 });
-		}
-	}*/
-}
-
-void CSemantic::CheckBoolExpType(CSymbol* Symbol, int StrNum)
-{
-	if (!Symbol) return;
-}
-
-void CSemantic::CheckDivModOperandType(CSymbol* Symbol, int StrNum)
-{
-	if (!Symbol) return;
-}
-
-void CSemantic::CheckMultOperandType(CSymbol* Symbol, int StrNum)
-{
-	if (!Symbol) return;
-}
 
 //void CSemantic::AddCheckRecord(CSymbol* Symbol, int StrNum)
 //{
@@ -210,11 +163,6 @@ bool CSemantic::CheckRecordFields(CRecordType* Rec, CSymbol* Symbol, int StrNum)
 		Constants::AddError(140, { StrNum, 0 });
 		return false;
 	}
-}
-
-void CSemantic::CheckRelatOperandType(CSymbol* Symbol, int StrNum)
-{
-	if (!Symbol) return;
 }
 
 void CSemantic::CheckScalarType(CSymbol* Symbol, CType* BaseType, int StrNum)
@@ -292,32 +240,8 @@ void CSemantic::AddFlagVarPart(CRecordType* Rec, CSymbol* Symdol, int StrNum)
 	Rec->FlagField.second = static_cast<CType*> (IdentMap[Symdol->GetSymbol()]);
 }
 
-void CSemantic::AddOperand(CSymbol* Symbol)
+void CSemantic::SetVarsType(CType* Type, int StrNum, bool IsRecordFields)
 {
-	if (!Symbol) return;
-	//m_OperandExpression.push_back(Symbol->SymbolCode);
-}
-
-void CSemantic::SetVarsType(CSymbol* Symbol, int StrNum, bool IsRecordFields)
-{
-	if (!Symbol) return;
-	CType* Type;
-
-	//if (Symbol->SymbolCode == ident)
-	{
-		if (!CheckDescription(Symbol, StrNum, utType))
-		{
-			Type = nullptr;
-		}
-		else
-		{
-			Type = static_cast<CType*> (IdentMap[Symbol->GetSymbol()]);
-		}
-	}
-	//else
-	//{
-	//	Type = m_CurrentRecord;
-	//}
 	for (auto var : m_TempVar)
 	{
 		CVar* Var = new CVar();
@@ -336,7 +260,7 @@ void CSemantic::SetVarsType(CSymbol* Symbol, int StrNum, bool IsRecordFields)
 	m_TempVar.clear();
 }
 
-void CSemantic::SetRecFieldType(CType* Type, vector<string> Vars, CRecordType* Rec, int StrNum)
+void CSemantic::SetRecFieldType(CType* Type, vector<string>& Vars, CRecordType* Rec, int StrNum)
 {
 	for (auto var : Vars)
 	{
@@ -348,17 +272,3 @@ void CSemantic::SetRecFieldType(CType* Type, vector<string> Vars, CRecordType* R
 	}
 	Vars.clear();
 }
-
-//void CSemantic::SetCurrentRecord(CSymbol* Symbol, bool IsCheckField)
-//{
-//	if (!Symbol) return;
-//	if(!IsCheckField)
-//		m_CurrentRecord = new CRecordType();	
-//	else
-//	{
-//		if (IdentMap.find(Symbol->GetSymbol()) != IdentMap.end())
-//		{
-//			m_CurrentRecord = static_cast<CRecordType*> (IdentMap[Symbol->GetSymbol()]);
-//		}
-//	}
-//}

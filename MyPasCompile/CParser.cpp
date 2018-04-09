@@ -113,8 +113,8 @@ bool CParser::ProgramBlock()
 
 bool CParser::TypesBlock()
 {
-	while (LexerGiveMeSymbolBistra()
-		&& (!Accept(endsy, false)
+	while (LexerGiveMeSymbolBistra() 
+			&& (!Accept(endsy, false)
 			&& !Accept(varsy, false)
 			&& !Accept(beginsy, false)
 			&& !Accept(ifsy, false)
@@ -125,6 +125,7 @@ bool CParser::TypesBlock()
 		if (!Accept(semicolon))
 		{
 			AddErrorAndSkip(14, { semicolon, varsy, beginsy, ifsy, whilesy, withsy, endsy });
+			break;
 		}
 	}
 
@@ -171,7 +172,10 @@ bool CParser::TypeDescription()
 			if (LexerGiveMeSymbolBistra())
 			{
 				CType* BaseType = Type();
-				Sem->CheckScalarType(TypeSymbol, BaseType, Lexer->GetCurrentStr());
+				if(!BaseType || BaseType->GetCustType() == tScalar)
+					Sem->CheckScalarType(TypeSymbol, BaseType, Lexer->GetCurrentStr());
+				/*else
+					Sem->*/
 				return BaseType != nullptr;
 			}
 			else
@@ -269,7 +273,10 @@ bool CParser::FixRecordPart(CRecordType* Rec)
 		if (Accept(semicolon)) LexerGiveMeSymbolBistra();
 		else
 		{
-			if (Accept(endsy, false)) LexerGiveMeSymbolBistra();
+			if (Accept(endsy, false))
+			{
+				return true;
+			}
 			else
 			{
 				AddErrorAndSkip(14, {});
@@ -474,7 +481,10 @@ bool CParser::VarBlock()
 			&& !Accept(withsy, false)))
 	{
 		if (!OneTypeVar())
+		{
 			AddErrorAndSkip(0, { semicolon, beginsy, ifsy, whilesy, withsy, endsy });
+			break;
+		}
 	}
 	if (m_pCurrentSymbol)
 	{
@@ -513,9 +523,10 @@ bool CParser::OneTypeVar()
 
 	if (Accept(colon, false))
 	{
-		if (Accept(ident))
+		if (LexerGiveMeSymbolBistra())
 		{
-			Sem->SetVarsType(m_pCurrentSymbol, Lexer->GetCurrentStr());
+			CType* BaseType = Type();
+			Sem->SetVarsType(BaseType, Lexer->GetCurrentStr());
 			if (Accept(semicolon)) return true;
 			else AddErrorAndSkip(14, { beginsy, ifsy, whilesy, withsy, endsy });
 		}
@@ -570,6 +581,8 @@ bool CParser::CompositeOperator()
 
 bool CParser::ComplexOperator()
 {
+	if (!m_pCurrentSymbol) return false;
+
 	switch (m_pCurrentSymbol->SymbolCode)
 	{
 	case beginsy:
@@ -687,16 +700,15 @@ bool CParser::SimpleOperator()
 bool CParser::AssignOperator()
 {
 	CType* TypeVar;
-	if (TypeVar = Variable())
-		if (Accept(assign, false))
-		{
-			CType* TypeExp = Expression();
-			if (!Sem->Cast(TypeVar, TypeExp, true))
-				AddErrorAndSkip(145, {});
-			return TypeExp != nullptr;
-		}
-		else AddErrorAndSkip(51, { beginsy, ifsy, whilesy, withsy, endsy });
-	else AddErrorAndSkip(2, { beginsy, ifsy, whilesy, withsy, endsy });
+	TypeVar = Variable();
+	if (Accept(assign, false))
+	{
+		CType* TypeExp = Expression();
+		if (!Sem->Cast(TypeVar, TypeExp, true))
+			AddErrorAndSkip(145, {});
+		return TypeExp != nullptr;
+	}
+	else AddErrorAndSkip(51, { beginsy, ifsy, whilesy, withsy, endsy });
 	return false;
 }
 
