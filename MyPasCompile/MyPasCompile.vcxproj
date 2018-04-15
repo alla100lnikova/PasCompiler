@@ -24,6 +24,7 @@
     <ClInclude Include="CLexer.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="CParser.h" />
+    <ClInclude Include="CScope.h" />
     <ClInclude Include="CSemantic.h" />
     <ClInclude Include="CSymbol.h" />
     <ClInclude Include="CValue.h" />
@@ -34,6 +35,7 @@
     <ClCompile Include="CLexer.cpp" />
     <ClCompile Include="Constants.cpp" />
     <ClCompile Include="CParser.cpp" />
+    <ClCompile Include="CScope.cpp" />
     <ClCompile Include="CSemantic.cpp" />
     <ClCompile Include="CSymbol.cpp" />
     <ClCompile Include="CValue.cpp" />

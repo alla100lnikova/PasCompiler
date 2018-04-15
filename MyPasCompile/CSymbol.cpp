@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include "CLexer.h"
+#include <io.h>
 using namespace std;
 
 //CSymbol
@@ -87,6 +88,7 @@ string CSymbol::GetStrSymbol(CharPosition& CurrentPosition, vector<string>& Prog
 
 	if (Result[0] == '\'' && CurrentChar != '\'') Constants::AddError( 75, {CurrentPosition.LineNumber - 1, (int)ProgramText[CurrentPosition.LineNumber - 1].length()} );
 
+	transform(Result.begin(), Result.end(), Result.begin(), ::tolower);
 	return Result;
 }
 
@@ -286,7 +288,6 @@ CSymbol* CIdentSymbol::ScanSymbol(CharPosition& CurrentPosition, vector<string>&
 	m_SymbolStr = GetStrSymbol(CurrentPosition, ProgramText, true);
 	if (m_SymbolStr == "true" || m_SymbolStr == "false")
 	{
-	
 		return new CValueSymbol(m_SymbolStr);
 	}
 

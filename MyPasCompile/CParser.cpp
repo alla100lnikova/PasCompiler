@@ -324,7 +324,8 @@ bool CParser::VariantRecordPart(CRecordType* Rec)
 {
 	if (Accept(ident))
 	{
-		Rec->FlagField.first = m_pCurrentSymbol->GetSymbol();
+		CVar* Var = new CVar(m_pCurrentSymbol->GetSymbol());
+		Rec->FlagField = Var;
 		if (Accept(colon))
 			if (Accept(ident))
 			{
@@ -605,7 +606,7 @@ bool CParser::ConditionOperator()
 		if (!(Type = Sem->GetBaseType(Type)))
 			AddErrorAndSkip(144, {});
 		else
-			if(Type->TypeName != "boolean")
+			if(Type->GetName() != "boolean")
 				AddErrorAndSkip(144, {});
 	}
 	else
@@ -642,7 +643,7 @@ bool CParser::CycleOperator()
 	if (!(Type = Sem->GetBaseType(Type)))
 		AddErrorAndSkip(144, {});
 	else
-		if (Type->TypeName != "boolean")
+		if (Type->GetName() != "boolean")
 			AddErrorAndSkip(144, {});
 
 	if (Accept(dosy, false))
@@ -765,7 +766,7 @@ CType* CParser::FullVariable(bool IsRecordField)
 		//а если это поле записи, то нада хранить стартовую, иначе в определениях не найдется
 		if (!IsRecordField)
 			if (CVar* Var = static_cast<CVar*> (Sem->CheckDescription(m_pCurrentSymbol, Lexer->GetCurrentStr(), utVar)))
-				Type = Var->GetType();
+				Type = Var->GetBaseType();
 			else Type = nullptr;
 			//if(IsRecordField) Sem->CheckRecordFields((CRecordType*) Type, m_pCurrentSymbol, Lexer->GetCurrentStr());
 			return Type;
@@ -798,7 +799,7 @@ CType* CParser::Term()
 	{
 		Type = Multiplier();
 		CType* BaseType = Sem->GetBaseType(Type);
-		string BaseTypeName = BaseType? BaseType->TypeName : "";
+		string BaseTypeName = BaseType? BaseType->GetName() : "";
 		if (MultBoolOperation())
 		{
 			if (BaseTypeName != "boolean") AddErrorAndSkip(210, {});
@@ -873,7 +874,7 @@ CType* CParser::SimpleExpression()
 	if (IsSign = Sign()) LexerGiveMeSymbolBistra();
 	Type = Term();
 	Type = Sem->GetBaseType(Type);
-	if (IsSign && Type && Type->TypeName != "real" && Type->TypeName != "integer")
+	if (IsSign && Type && Type->GetName() != "real" && Type->GetName() != "integer")
 		AddErrorAndSkip(184, {});
 
 	bool IsBoolOp = false;
@@ -881,7 +882,7 @@ CType* CParser::SimpleExpression()
 	{
 		LexerGiveMeSymbolBistra();
 		Type = Sem->Cast(Type, Term());
-		if (IsBoolOp && Type && Type->TypeName != "boolean")
+		if (IsBoolOp && Type && Type->GetName() != "boolean")
 		{
 			AddErrorAndSkip(210, {});
 			continue;

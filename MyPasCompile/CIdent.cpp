@@ -1,7 +1,8 @@
 #include "CIdent.h"
 
-CIdent::CIdent(eUseType UseType)
+CIdent::CIdent(eUseType UseType, string Name)
 	: m_UseType(UseType)
+	, m_Name(Name)
 {
 }
 
@@ -9,22 +10,29 @@ CIdent::~CIdent()
 {
 }
 
-CType::CType(string TypeName, string BaseType, eCustomType Type) : CIdent(utType)
+CType::CType(string TypeName, eCustomType Type) : CTypedIdent(utType, TypeName)
 	, m_Type(Type)
-	, TypeName(TypeName)
-	, BaseTypeName(BaseType)
 {
 }
 
-CRecordType::CRecordType() : CType("", "", tRecord)
+CRecordType::CRecordType() : CType("", tRecord)
 {
 }
 
-CRecordType::CRecordType(map<string, CIdent*> Fields) : CType("", "", tRecord)
-	, RecordFields(Fields) 
+CRecordType::~CRecordType()
 {
+	delete FlagField;
+	for (auto var : RecordFields)
+	{
+		delete var.second;
+	}
+
+	for (auto var : RecordVarFields)
+	{
+		delete var.first;
+	}
 }
 
-CVar::CVar() : CIdent(utVar)
+CVar::CVar(string Name) : CTypedIdent(utVar, Name)
 {
 }

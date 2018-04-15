@@ -51,6 +51,9 @@
     <ClInclude Include="CSemantic.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
+    <ClInclude Include="CScope.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CSymbol.cpp">
@@ -78,6 +81,9 @@
       <Filter>Файлы исходного кода\Analyzers</Filter>
     </ClCompile>
     <ClCompile Include="CIdent.cpp">
+      <Filter>Файлы исходного кода\Semantic</Filter>
+    </ClCompile>
+    <ClCompile Include="CScope.cpp">
       <Filter>Файлы исходного кода\Semantic</Filter>
     </ClCompile>
   </ItemGroup>

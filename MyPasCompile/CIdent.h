@@ -8,48 +8,53 @@ using namespace std;
 class CIdent
 {
 protected:
+	string m_Name;
 	eUseType m_UseType;
 
 public:
-	CIdent(eUseType UseType);
+	CIdent(eUseType UseType, string Name);
 	eUseType GetUseType() { return m_UseType; }
-	~CIdent();
+	string GetName() { return m_Name; }
+	virtual ~CIdent();
 };
 
-class CType : public CIdent
+class CType;
+class CTypedIdent : public CIdent
+{
+protected:
+	CType* m_Type;
+
+public:
+	CTypedIdent(eUseType UseType, string TypeName) : CIdent(UseType, TypeName) {}
+	CType* GetBaseType() { return m_Type; }
+	void SetBaseType(CType* Type) { m_Type = Type; }
+	virtual ~CTypedIdent() {}
+};
+
+class CType : public CTypedIdent
 {
 protected:
 	eCustomType m_Type;
 
 public:
 	eCustomType GetCustType() { return m_Type; }
-	CType(string TypeName, string BaseType, eCustomType Type = tScalar);
-	string TypeName;
-	string BaseTypeName;
-	~CType() {}
-
+	CType(string TypeName, eCustomType Type = tScalar);
+	virtual ~CType() {}
 };
 
-class CVar : public CIdent
+class CVar : public CTypedIdent
 {
-private:
-	CType* m_VarType;
-
 public:
-	CVar();
-
-	CType* GetType() { return m_VarType; }
-	void SetType(CType* Value) { m_VarType = Value; }
+	CVar(string Name);
 };
-
 
 class CRecordType : public CType
 {
 public:
-	map<string, CIdent*> RecordFields;
-	pair<string, CIdent*> FlagField;
+	map<string, CVar*> RecordFields;
+	CVar* FlagField;
 	//вар. поля. Название, значение и тип
 	map<CRecordType*, vector<CValue*>> RecordVarFields;
 	CRecordType();
-	CRecordType(map<string, CIdent*> Fields);
+	~CRecordType();
 };

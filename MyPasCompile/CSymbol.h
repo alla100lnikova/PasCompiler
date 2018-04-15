@@ -9,7 +9,6 @@ using namespace std;
 class CSymbol
 {
 protected:
-	//Возможно, надо убрать
 	string m_SymbolStr;
 	eSymbolType SymbolType;
 
@@ -33,7 +32,6 @@ class CValueSymbol : public CSymbol
 {
 private:
 	CValue* m_Value;
-	//void ScanConst(CharPosition& CurrentPosition, vector<string>& ProgramText, char& CurrentChar);
 	void ScanStrSymbol(CharPosition& CurrentPosition, vector<string>& ProgramText);
 	bool ScanDoubleConst(CharPosition& CurrentPosition, vector<string>& ProgramText, char& CurrentChar);
 public:
@@ -55,7 +53,6 @@ public:
 class COperatorSymbol : public CSymbol
 {
 private:
-	void ScanOperator(CharPosition& CurrentPosition, vector<string>& ProgramText);
 	void ScanDoubleOperator(CharPosition& CurrentPosition, vector<string>& ProgramText);
 	void SkipComments(CharPosition& CurrentPosition, vector<string>& ProgramText, char EndChar);
 public:
