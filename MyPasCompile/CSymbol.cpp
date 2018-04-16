@@ -93,7 +93,7 @@ string CSymbol::GetStrSymbol(CharPosition& CurrentPosition, vector<string>& Prog
 		Result += CurrentChar;
 	} while (IsSymbolTypeValid(CurrentChar = GetNextChar(CurrentPosition, ProgramText), IsString) && CurrentPosition.CharNumber != -1);
 
-	if (Result[0] == '\'' && CurrentChar != '\'') Constants::AddError( 75, {CurrentPosition.LineNumber - 1, (int)ProgramText[CurrentPosition.LineNumber - 1].length()} );
+	if (Result[0] == '\'' && CurrentChar != '\'') Constants::AddError( 75, {CurrentPosition.LineNumber, (int)ProgramText[CurrentPosition.LineNumber - 1].length()} );
 
 	transform(Result.begin(), Result.end(), Result.begin(), ::tolower);
 	return Result;
@@ -206,7 +206,8 @@ bool CValueSymbol::ScanDoubleConst(CharPosition& CurrentPosition, vector<string>
 				}
 			}
 			CurrentChar = GetNextChar(CurrentPosition, ProgramText);
-			m_SymbolStr += GetStrSymbol(CurrentPosition, ProgramText, false);
+			if((Type = GetCharType(CurrentChar)) == ctNumber)
+				m_SymbolStr += GetStrSymbol(CurrentPosition, ProgramText, false);
 		}
 		else 
 		{
@@ -238,7 +239,8 @@ CSymbol* CValueSymbol::ScanSymbol(CharPosition& CurrentPosition, vector<string>&
 			? ProgramText.at(CurrentPosition.LineNumber).at(CurrentPosition.CharNumber)
 			: '\n';
 
-		if (CurrentPosition.LineNumber >= ProgramText.size())
+		int size = ProgramText.size();
+		if (CurrentPosition.LineNumber >= size)
 		{
 			return nullptr;
 		}
@@ -249,7 +251,7 @@ CSymbol* CValueSymbol::ScanSymbol(CharPosition& CurrentPosition, vector<string>&
 			if (Value > MAXINTPAS)
 			{
 				Constants::AddError( 203, CurrentPosition );
-				SymbolCode = error;
+				SymbolCode = intc;
 			}
 			else
 			{
@@ -265,14 +267,14 @@ CSymbol* CValueSymbol::ScanSymbol(CharPosition& CurrentPosition, vector<string>&
 				if (Value > MAXREALPAS)
 				{
 					Constants::AddError(207, CurrentPosition);
-					SymbolCode = error;
+					SymbolCode = floatc;
 				}
 				else
 				{
 					if (Value < MINREALPAS)
 					{
 						Constants::AddError(206, CurrentPosition);
-						SymbolCode = error;
+						SymbolCode = floatc;
 					}
 					else
 					{
@@ -513,6 +515,7 @@ void COperatorSymbol::ScanDoubleOperator(CharPosition& CurrentPosition, vector<s
 	break;
 	default:
 		Constants::AddError( 6, LastPosition );
+		SymbolCode = error;
 		break;
 	}
 

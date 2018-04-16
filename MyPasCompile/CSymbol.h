@@ -45,7 +45,6 @@ public:
 class CIdentSymbol : public CSymbol
 {
 public:
-	//¬озможно, надо хранить номер в таблице имен?
 	CIdentSymbol();
 	CSymbol* ScanSymbol(CharPosition& CurrentPosition, vector<string>& ProgramText);
 };

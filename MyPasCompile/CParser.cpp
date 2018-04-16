@@ -110,7 +110,7 @@ void CParser::ProgramBlock()
 			else AddErrorAndSkip(13, {});
 			break;
 		default:
-			AddErrorAndSkip(17, {});
+			AddErrorAndSkip(17, {beginsy, point});
 			OperatorBlock();
 			break;
 		}
@@ -558,7 +558,7 @@ void CParser::CompositeOperator()
 		{
 			if (Accept(endsy, false)) continue;
 			if (Accept(point, false)) break;
-			AddErrorAndSkip(14, { semicolon, ident, beginsy, ifsy, whilesy, withsy, endsy, point });
+			AddErrorAndSkip(14, { semicolon, beginsy, ifsy, whilesy, withsy, endsy, point });
 		}
 		else
 		{
