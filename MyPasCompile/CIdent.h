@@ -15,6 +15,7 @@ public:
 	CIdent(eUseType UseType, string Name);
 	eUseType GetUseType() { return m_UseType; }
 	string GetName() { return m_Name; }
+	void SetName(string Name) { m_Name = Name; }
 	virtual ~CIdent();
 };
 

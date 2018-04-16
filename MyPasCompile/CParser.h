@@ -11,8 +11,13 @@ private:
 	CSemantic* Sem;
 	CSymbol* m_pCurrentSymbol;
 	bool IsSemicolonError;
+
+	vector<bool> InWithOperator;
+	vector<pair<int, CRecordType*> > WithRec;
+
 	bool LexerGiveMeSymbolBistra() 
 	{ 
+		delete m_pCurrentSymbol;
 		m_pCurrentSymbol = Lexer->GetNextSymbol(); 
 		return m_pCurrentSymbol != nullptr; 
 	}
@@ -21,8 +26,12 @@ private:
 	bool Accept(eOperator Next, bool GetNext = true);
 
 public:
-	CParser(CLexer* Lex, CSymbol* CurSym) : Lexer(Lex), m_pCurrentSymbol(CurSym) { Sem = new CSemantic(); Program(); }
-	~CParser() {}
+	CParser(CLexer* Lex, CSymbol* CurSym) : Lexer(Lex), m_pCurrentSymbol(CurSym), InWithOperator(false) 
+	{ 
+		Sem = new CSemantic(); 
+		Program(); 
+	}
+	~CParser() { delete Sem; delete m_pCurrentSymbol; }
 	CSymbol* GetCurrentSymbol() { return m_pCurrentSymbol; }
 
 //=======================================================================================
@@ -56,7 +65,7 @@ public:
 	//Секция записи
 	CType* RecordSection(vector<string>& Vars);
 	//Список меток варианта
-	vector<CValue*> VariantLableList();
+	vector<CValue*> VariantLableList(CType* FlagType);
 	//Метка варианта
 	bool VariantLable();
 	//Раздел описания переменных
@@ -73,10 +82,10 @@ public:
 	bool CompositeOperator();
 	//Оператор присваивания
 	bool AssignOperator();
-	CType* Variable(bool IsRecordField = false);
-	CType* FullVariable(bool IsRecordField);
+	CType* Variable(CRecordType* Rec = nullptr);
+	CType* FullVariable(CRecordType* Rec = nullptr);
 	//Переменная - поле записи
-	CType* VariableRecordField();
+	CType* VariableRecordField(CRecordType* Rec = nullptr);
 	//Выражение
 	CType* Expression();
 	//Операция отношения

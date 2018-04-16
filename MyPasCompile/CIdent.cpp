@@ -15,7 +15,11 @@ CType::CType(string TypeName, eCustomType Type) : CTypedIdent(utType, TypeName)
 {
 }
 
-CRecordType::CRecordType() : CType("", tRecord)
+CRecordType::CRecordType() : 
+	CType("", tRecord),
+	FlagField(nullptr),
+	RecordFields({}),
+	RecordVarFields({})
 {
 }
 

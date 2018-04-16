@@ -5,7 +5,7 @@
 
 CLexer::CLexer(vector<string> ProgramText)
 	:m_ProgramText(ProgramText),
-	m_CurrentPosition { 0, -1 }
+	m_CurrentPosition { -1, -1 }
 {
 }
 

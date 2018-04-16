@@ -1,5 +1,5 @@
 #pragma once
-#pragma comment(linker, "/STACK:3500000")
+#pragma comment(linker, "/STACK:4500000")
 #ifndef _CONSTS_
 #define _CONSTS_
 

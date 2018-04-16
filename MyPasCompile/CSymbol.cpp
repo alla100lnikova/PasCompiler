@@ -19,11 +19,16 @@ CSymbol::CSymbol(eSymbolType Type)
 void CSymbol::SetSymbolCode()
 {
 	int CountLetter = m_SymbolStr.length(), i = 0;
-	if (CountLetter > 2) i = Constants::IdentNumberInKeywordTable[CountLetter - 1];
-	while ((i < Constants::IdentNumberInKeywordTable[CountLetter])
-		&& m_SymbolStr != Constants::KeyWordTable[i].Word) i++;
+	if (CountLetter > 1 && CountLetter < 9)
+	{
+		i = Constants::IdentNumberInKeywordTable[CountLetter - 1];
+		while ((i < Constants::IdentNumberInKeywordTable[CountLetter])
+			&& m_SymbolStr != Constants::KeyWordTable[i].Word) i++;
 
-	SymbolCode = Constants::KeyWordTable[i].Code;
+		SymbolCode = Constants::KeyWordTable[i].Code;
+	}
+	else
+		SymbolCode = ident;
 }
 
 eCharType CSymbol::GetCharType(char Char)
@@ -48,14 +53,16 @@ eCharType CSymbol::GetCharType(char Char)
 
 char CSymbol::GetNextChar(CharPosition& CurrentPosition, vector<string>& ProgramText)
 {
-	if (CurrentPosition.CharNumber >= ProgramText[CurrentPosition.LineNumber].size())
+	int size = ProgramText.size();
+	if (CurrentPosition.CharNumber == -1)
 	{
 		CurrentPosition.LineNumber++;
 	}
 
-	if (CurrentPosition.LineNumber < ProgramText.size())
+	if (CurrentPosition.LineNumber < size)
 	{
-		if (++CurrentPosition.CharNumber >= ProgramText[CurrentPosition.LineNumber].size())
+		int sizeStr = ProgramText[CurrentPosition.LineNumber].size();
+		if (++CurrentPosition.CharNumber >= sizeStr)
 		{
 			CurrentPosition.CharNumber = -1;
 			return '\n'; 
@@ -94,7 +101,8 @@ string CSymbol::GetStrSymbol(CharPosition& CurrentPosition, vector<string>& Prog
 
 CSymbol* CSymbol::ScanSymbol(CharPosition& CurrentPosition, vector<string>& ProgramText)
 {
-	if (CurrentPosition.LineNumber >= ProgramText.size())
+	int size = ProgramText.size();
+	if (CurrentPosition.LineNumber >= size)
 	{
 		return nullptr;
 	}
@@ -104,7 +112,7 @@ CSymbol* CSymbol::ScanSymbol(CharPosition& CurrentPosition, vector<string>& Prog
 		? (CurrentChar = GetNextChar(CurrentPosition, ProgramText)) 
 		: ProgramText.at(CurrentPosition.LineNumber).at(CurrentPosition.CharNumber);
 
-	if (CurrentPosition.LineNumber >= ProgramText.size())
+	if (CurrentPosition.LineNumber >= size)
 	{
 		return nullptr;
 	}
@@ -212,7 +220,8 @@ bool CValueSymbol::ScanDoubleConst(CharPosition& CurrentPosition, vector<string>
 
 CSymbol* CValueSymbol::ScanSymbol(CharPosition& CurrentPosition, vector<string>& ProgramText)
 {
-	if (CurrentPosition.LineNumber >= ProgramText.size())
+	int size = ProgramText.size();
+	if (CurrentPosition.LineNumber >= size)
 	{
 		return nullptr;
 	}
@@ -311,7 +320,8 @@ CSymbol* COperatorSymbol::ScanSymbol(CharPosition& CurrentPosition, vector<strin
 		? (CurrentChar = GetNextChar(CurrentPosition, ProgramText))
 		: ProgramText.at(CurrentPosition.LineNumber).at(CurrentPosition.CharNumber);
 
-	if (CurrentPosition.LineNumber >= ProgramText.size())
+	int size = ProgramText.size();
+	if (CurrentPosition.LineNumber >= size)
 	{
 		return nullptr;
 	}
@@ -390,7 +400,8 @@ CSymbol* COperatorSymbol::ScanSymbol(CharPosition& CurrentPosition, vector<strin
 void COperatorSymbol::SkipComments(CharPosition& CurrentPosition, vector<string>& ProgramText, char EndChar)
 {
 	char CurrentChar = ProgramText.at(CurrentPosition.LineNumber).at(CurrentPosition.CharNumber);
-	while (CurrentPosition.LineNumber < ProgramText.size())
+	int size = ProgramText.size();
+	while (CurrentPosition.LineNumber < size)
 	{
 		while (CurrentPosition.CharNumber != -1)
 		{
@@ -412,7 +423,7 @@ void COperatorSymbol::SkipComments(CharPosition& CurrentPosition, vector<string>
 		else CurrentPosition.CharNumber = 0;
 	}
 
-	if (CurrentPosition.LineNumber >= ProgramText.size())
+	if (CurrentPosition.LineNumber >= size)
 	{
 		Constants::AddError( 86, { CurrentPosition.LineNumber - 1, (int)ProgramText[CurrentPosition.LineNumber - 1].length()} );
 		SymbolCode = error;

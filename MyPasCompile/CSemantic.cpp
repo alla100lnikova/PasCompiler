@@ -3,11 +3,21 @@
 CSemantic::CSemantic()
 {
 	m_BaseScope = new CScope(nullptr);
-	m_BaseScope->AddIdent("integer", dynamic_cast<CIdent*>(new CType("integer")), 0);
-	m_BaseScope->AddIdent("real", dynamic_cast<CIdent*>(new CType("real")), 0);
-	m_BaseScope->AddIdent("boolean", dynamic_cast<CIdent*>(new CType("boolean")), 0);
-	m_BaseScope->AddIdent("char", dynamic_cast<CIdent*>(new CType("char")), 0);
-	m_BaseScope->AddIdent("string", dynamic_cast<CIdent*>(new CType("string")), 0);
+	CType* Type = new CType("integer");
+	Type->SetBaseType(Type);
+	m_BaseScope->AddIdent("integer", dynamic_cast<CIdent*>(Type), 0);
+	Type = new CType("real");
+	Type->SetBaseType(Type);
+	m_BaseScope->AddIdent("real", dynamic_cast<CIdent*>(Type), 0);
+	Type = new CType("boolean");
+	Type->SetBaseType(Type);
+	m_BaseScope->AddIdent("boolean", dynamic_cast<CIdent*>(Type), 0);
+	Type = new CType("char");
+	Type->SetBaseType(Type);
+	m_BaseScope->AddIdent("char", dynamic_cast<CIdent*>(Type), 0);
+	Type = new CType("string");
+	Type->SetBaseType(Type);
+	m_BaseScope->AddIdent("string", dynamic_cast<CIdent*>(Type), 0);
 
 	m_CurrentScope = new CScope(m_BaseScope);
 }
@@ -48,7 +58,7 @@ CType* CSemantic::GetBaseType(CType* Type)
 	return Type->GetBaseType(); 
 }
 
-CType * CSemantic::Cast(CType* One, CType* Two, bool IsAssign)
+CType* CSemantic::Cast(CType* One, CType* Two, bool IsAssign)
 {
 	One = GetBaseType(One);
 	Two = GetBaseType(Two);
@@ -74,67 +84,81 @@ CType * CSemantic::Cast(CType* One, CType* Two, bool IsAssign)
 	return nullptr;
 }
 
+eValueType CSemantic::GetValType(CType* Type)
+{
+	if(Type == (CType*)m_BaseScope->GetIdent("integer")) return vtInteger;
+	if (Type == (CType*)m_BaseScope->GetIdent("real")) return vtReal;
+	if (Type == (CType*)m_BaseScope->GetIdent("string")) return vtString;
+	if (Type == (CType*)m_BaseScope->GetIdent("char")) return vtInteger;
+	if (Type == (CType*)m_BaseScope->GetIdent("boolean")) return vtBoolean;
+
+	return eValueType();
+}
+
 CIdent* CSemantic::CheckDescription(CSymbol* Symbol, int StrNum, eUseType UseType)
 {
 	if (!Symbol) return nullptr;	
 	return m_CurrentScope->CheckDescription(Symbol->GetSymbol(), UseType, StrNum);
 }
 
-//void CSemantic::AddCheckRecord(CSymbol* Symbol, int StrNum)
-//{
-//	if (!Symbol) return;
-//	if (!m_CurrentRecord)
-//	{
-//		CRecordType* Rec = static_cast<CRecordType*> (IdentMap[Symbol->GetSymbol()]);
-//		m_CurrentRecord = Rec;
-//	}
-//	else
-//	{
-//		CRecordType* Rec = static_cast<CRecordType*> (m_CurrentRecord->RecordFields[Symbol->GetSymbol()]);
-//		m_CurrentRecord = Rec;
-//	}
-//}
-
-
 CType* CSemantic::GetIdentType(CSymbol* Ident)
 {
 	return (CType*) m_CurrentScope->GetIdent(Ident->GetSymbol());
 }
 
-bool CSemantic::CheckRecordFields(CRecordType* Rec, CSymbol* Symbol, int StrNum)
+CType* CSemantic::CheckRecordFields(CRecordType* Rec, CSymbol* Symbol, int StrNum)
 {
-	if (!Symbol) return false;
+	if (!Symbol) return nullptr;
 	
-	if (Rec != nullptr) 
+	if (Rec != nullptr && Rec->GetCustType() == tRecord)
 	{
-		if (Rec->RecordFields.find(Symbol->GetSymbol()) == Rec->RecordFields.end())
-		{
-			bool IsFind = false;
-			for (auto rec : Rec->RecordFields)
-			{
-				CType* Type = (CType*)rec.second;
-				if (Type->GetCustType() == tRecord) IsFind = CheckRecordFields((CRecordType*)Type, Symbol, StrNum);
-				if (IsFind) return true;
-			}
+		if (Rec->FlagField && Rec->FlagField->GetName() == Symbol->GetSymbol())
+			return Rec->FlagField->GetBaseType();
 
-			Constants::AddError(152, { StrNum, 0 });
-			return false;
+		auto It = Rec->RecordFields.find(Symbol->GetSymbol());
+		if (It != Rec->RecordFields.end())
+		{
+			return It->second->GetBaseType();
+		}
+
+		CType* Type = nullptr;
+		for (auto rec : Rec->RecordVarFields)
+		{
+			Type = CheckRecordFields(rec.first, Symbol, StrNum);
+			if (Type)
+			{
+				return Type;
+			}
 		}
 	}
-	else
-	{
-		Constants::AddError(140, { StrNum, 0 });
-		return false;
-	}
+
+	return nullptr;
 }
 
-void CSemantic::CheckScalarType(CSymbol* Symbol, CType* BaseType, int StrNum)
+CType* CSemantic::CheckWithRecords(vector<pair<int, CRecordType*>>& WithRec, CSymbol*  Name, int StrNum)
 {
-	if (!Symbol) return;
+	CType* Type = nullptr;
+	for (int i = WithRec.size() - 1; i >= 0; i--)
+	{
+		Type = CheckRecordFields(WithRec[i].second, Name, StrNum);
+		if (Type) break;
+	}
 
-	CType* Type = new CType(Symbol->GetSymbol());
+	return Type;
+}
+
+void CSemantic::AddCustomType(string Symbol, CType* BaseType, int StrNum)
+{
+	CType* Type;
+	if (BaseType && BaseType->GetCustType() == tRecord)
+	{
+		Type = BaseType;
+		Type->SetName(Symbol);
+	}
+	else
+		Type = new CType(Symbol);
 	Type->SetBaseType(BaseType);
-	m_CurrentScope->AddIdent(Symbol->GetSymbol(), dynamic_cast<CIdent*>(Type), StrNum);
+	m_CurrentScope->AddIdent(Symbol, dynamic_cast<CIdent*>(Type), StrNum);
 }
 
 void CSemantic::AddVar(CSymbol* Symbol, int StrNum)
@@ -184,7 +208,7 @@ void CSemantic::AddFlagVarPart(CRecordType* Rec, CSymbol* Symdol, int StrNum)
 		Type = Type->GetBaseType();
 	}
 
-	if (Type->GetName() == "" || Type->GetName() != "string" || Type->GetName() != "real")
+	if (Type->GetName() == "" || Type->GetName() == "string" || Type->GetName() == "real")
 	{
 		Constants::AddError(118, { StrNum, 0 });
 		Rec->FlagField = {};
