@@ -15,32 +15,36 @@ private:
 	vector<bool> InWithOperator;
 	vector<pair<int, CRecordType*> > WithRec;
 
-	bool LexerGiveMeSymbolBistra() 
-	{ 
+	bool LexerGiveMeSymbolBistra()
+	{
 		delete m_pCurrentSymbol;
-		m_pCurrentSymbol = Lexer->GetNextSymbol(); 
-		return m_pCurrentSymbol != nullptr; 
+		m_pCurrentSymbol = Lexer->GetNextSymbol();
+		return m_pCurrentSymbol != nullptr;
 	}
 	void SkipTo(vector<eOperator> SkipSym);
 	void AddErrorAndSkip(int ErrorCode, vector<eOperator> SkipSym);
 	bool Accept(eOperator Next, bool GetNext = true);
 
 public:
-	CParser(CLexer* Lex, CSymbol* CurSym) : Lexer(Lex), m_pCurrentSymbol(CurSym), InWithOperator(false) 
-	{ 
-		Sem = new CSemantic(); 
-		Program(); 
+	CParser(CLexer* Lex, CSymbol* CurSym) : Lexer(Lex), m_pCurrentSymbol(CurSym), InWithOperator(false)
+	{
+		Sem = new CSemantic();
+		Program();
 	}
-	~CParser() { delete Sem; delete m_pCurrentSymbol; }
+	~CParser() 
+	{ 
+		delete Sem; 
+		delete m_pCurrentSymbol; 
+	}
 	CSymbol* GetCurrentSymbol() { return m_pCurrentSymbol; }
 
-//=======================================================================================
+	//=======================================================================================
 	//Программа
-	bool Program();
+	void Program();
 	//Какой-то список после имени проги
 	bool FileList();
 	//Блок программы
-	bool ProgramBlock();
+	void ProgramBlock();
 	//Число без знака
 	CType* UnsignedNumber();
 	//Знак
@@ -49,7 +53,7 @@ public:
 	//Раздел описания типов
 	bool TypesBlock();
 	//Описание типа
-	bool TypeDescription();
+	void TypeDescription();
 	//Тип
 	CType* Type();
 	//Записи
@@ -73,15 +77,15 @@ public:
 	//Описание однотипных переменных
 	bool OneTypeVar();
 	//Раздел операторов
-	bool OperatorBlock();
-	bool Operator();
-	bool SimpleOperator();
+	void OperatorBlock();
+	void Operator();
+	void SimpleOperator();
 	//Сложный оператор
-	bool ComplexOperator();
+	void ComplexOperator();
 	//Составной оператор
-	bool CompositeOperator();
+	void CompositeOperator();
 	//Оператор присваивания
-	bool AssignOperator();
+	void AssignOperator();
 	CType* Variable(CRecordType* Rec = nullptr);
 	CType* FullVariable(CRecordType* Rec = nullptr);
 	//Переменная - поле записи
@@ -102,10 +106,10 @@ public:
 	CType* Multiplier();
 	//Константа в выражении - число, переменная и т.п
 	CType* Constant();
-	bool CycleOperator();
-	bool ConditionOperator();
+	void CycleOperator();
+	void ConditionOperator();
 	//Оператор присоединения
-	bool WithOperator();
+	void WithOperator();
 	//Список переменных-записей для оператора присоединения
 	bool RecordVarList();
 };

@@ -420,7 +420,11 @@ void COperatorSymbol::SkipComments(CharPosition& CurrentPosition, vector<string>
 			}
 		}
 		if (CurrentPosition.CharNumber != -1) break;
-		else CurrentPosition.CharNumber = 0;
+		else
+		{
+			CurrentPosition.CharNumber = 0;
+			CurrentPosition.LineNumber++;
+		}
 	}
 
 	if (CurrentPosition.LineNumber >= size)
