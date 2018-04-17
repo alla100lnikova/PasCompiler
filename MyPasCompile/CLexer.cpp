@@ -1,7 +1,7 @@
 #include "CLexer.h"
 #include <iostream>
 #include <Windows.h>
-
+#include <fstream>
 
 CLexer::CLexer(vector<string> ProgramText)
 	:m_ProgramText(ProgramText),
@@ -9,71 +9,43 @@ CLexer::CLexer(vector<string> ProgramText)
 {
 }
 
-void CLexer::Print(CSymbol* Symbol)
-{
-	if (Symbol->GetSymbolType() == stValue)
-	{
-		CValueSymbol* Sym = dynamic_cast<CValueSymbol*>(Symbol);
-		if (Sym == nullptr) return;
-		CValue* Val = Sym->GetValue();
-		
-		if (Val == nullptr) return;
-		switch (Val->GetValueType())
-		{
-			case vtInteger:
-			{
-				CInteger* V = static_cast<CInteger*> (Val);
-				cout << V->GetValue() << "\n";
-			}
-			break;
-			case vtReal:
-			{
-				CReal* V = static_cast<CReal*> (Val);
-				cout << V->GetValue() << "\n";
-			}
-			break;
-			default:
-				cout << Symbol->GetSymbol() << " = " << Symbol->SymbolCode << "\n";
-				break;
-		}
-	}
-	else
-	{
-		cout << Symbol->GetSymbol() << " = " << Symbol->SymbolCode << "\n";
-	}
-}
-
-void CLexer::Print(string Str, int Index)
+void CLexer::Print(string Str, int Index, ofstream& Output)
 {
 	SetConsoleCP(1251);
 	SetConsoleOutputCP(1251);
-	cout << Index + 1 << " " << Str << "\n";
+	Output << Index + 1 << " " << Str << "\n";
 	for (auto Err : Constants::ErrorList)
 	{
 		if (Err.second.LineNumber == Index)
 		{
-			cout << "** ErrorCode: " << Err.first << " (LineNumber " << Err.second.LineNumber + 1 << ", CharNumber " << Err.second.CharNumber + 1 << ") **\n";
-			cout << "** " << Constants::ErrorCodeTable.at(Err.first) << " **\n";
+			Output << "** ErrorCode: " << Err.first << " (LineNumber " << Err.second.LineNumber + 1 << ", CharNumber " << Err.second.CharNumber + 1 << ") **\n";
+			Output << "** " << Constants::ErrorCodeTable.at(Err.first) << " **\n";
 		}
 	}
 }
 
 void CLexer::Print()
 {
+	ofstream Output("Log.txt", ios::app);
+
+	Output << "================================================================================================\n";
+
 	int i = 0;
 	for (auto Str : m_ProgramText)
 	{
-		Print(Str, i++);
+		Print(Str, i++, Output);
 	}
 
 	for (auto Err : Constants::ErrorList)
 	{
 		if (Err.second.LineNumber == m_ProgramText.size())
 		{
-			cout << "** ErrorCode: " << Err.first << " (LineNumber " << Err.second.LineNumber + 1 << ", CharNumber " << Err.second.CharNumber + 1 << ") **\n";
-			cout << "** " << Constants::ErrorCodeTable.at(Err.first) << " **\n";
+			Output << "** ErrorCode: " << Err.first << " (LineNumber " << Err.second.LineNumber + 1 << ", CharNumber " << Err.second.CharNumber + 1 << ") **\n";
+			Output << "** " << Constants::ErrorCodeTable.at(Err.first) << " **\n";
 		}
 	}
+	Output << "================================================================================================\n";
+	Output.close();
 }
 
 CSymbol* CLexer::GetNextSymbol()

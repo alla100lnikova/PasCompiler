@@ -12,9 +12,7 @@ class CLexer
 private:
 	vector<string> m_ProgramText;
 	CharPosition m_CurrentPosition;
-
-	void Print(CSymbol* Symbol);
-	void Print(string Str, int Index);
+	void Print(string Str, int Index, ofstream& Output);
 
 public:
 	CLexer(vector<string> ProgramText);

@@ -117,7 +117,10 @@ CSymbol* CSymbol::ScanSymbol(CharPosition& CurrentPosition, vector<string>& Prog
 		return nullptr;
 	}
 
-	while (CurrentChar == ' ' || CurrentChar == '\n' || CurrentChar == '\t') CurrentChar = GetNextChar(CurrentPosition, ProgramText);
+	while ((CurrentChar == ' ' 
+		|| CurrentChar == '\n'
+		|| CurrentChar == '\t') 
+		&& CurrentPosition.LineNumber < size) CurrentChar = GetNextChar(CurrentPosition, ProgramText);
 
 	switch (GetCharType(CurrentChar))
 	{

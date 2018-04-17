@@ -18,8 +18,6 @@ void CParser::SkipTo(vector<eOperator> SkipSym)
 	{
 		LexerGiveMeSymbolBistra();
 	}
-	//if (m_pCurrentSymbol && m_pCurrentSymbol->SymbolCode == semicolon)
-	//	LexerGiveMeSymbolBistra();
 }
 
 void CParser::Program()
@@ -119,19 +117,22 @@ void CParser::ProgramBlock()
 
 bool CParser::TypesBlock()
 {
-	while (LexerGiveMeSymbolBistra()
-		&& (!Accept(endsy, false)
+	LexerGiveMeSymbolBistra();
+	while ((!Accept(endsy, false)
 			&& !Accept(varsy, false)
 			&& !Accept(beginsy, false)
 			&& !Accept(ifsy, false)
 			&& !Accept(whilesy, false)
 			&& !Accept(withsy, false)))
 	{
-		TypeDescription();
-		if (!Accept(semicolon))
+		if (TypeDescription())
 		{
-			AddErrorAndSkip(14, { semicolon, varsy, beginsy, ifsy, whilesy, withsy, endsy, point });
-			break;
+			if (!Accept(semicolon))
+			{
+				AddErrorAndSkip(14, { varsy, beginsy, ifsy, whilesy, withsy, endsy, point });
+				break;
+			}
+			LexerGiveMeSymbolBistra();
 		}
 	}
 
@@ -150,25 +151,25 @@ bool CParser::TypesBlock()
 			if (LexerGiveMeSymbolBistra()) OperatorBlock();
 			else
 			{
-				AddErrorAndSkip(17, {});
+				AddErrorAndSkip(17, { beginsy, point });
 				return false;
 			}
 			break;
 		default:
-			AddErrorAndSkip(17, {});
+			AddErrorAndSkip(17, { beginsy, point });
 			OperatorBlock();
 			break;
 		}
 	}
 	else
 	{
-		AddErrorAndSkip(17, {});
+		AddErrorAndSkip(17, { beginsy, point });
 		return false;
 	}
 	return true;
 }
 
-void CParser::TypeDescription()
+bool CParser::TypeDescription()
 {
 	if (Accept(ident, false))
 	{
@@ -189,12 +190,15 @@ void CParser::TypeDescription()
 		else
 		{
 			AddErrorAndSkip(16, { varsy, beginsy, ifsy, whilesy, withsy });
+			return false;
 		}
 	}
 	else
 	{
 		AddErrorAndSkip(2, { varsy, beginsy, ifsy, whilesy, withsy });
+		return false;
 	}
+	return true;
 }
 
 CType* CParser::Type()
@@ -499,11 +503,6 @@ bool CParser::VarBlock()
 		{
 		case beginsy:
 			if (LexerGiveMeSymbolBistra()) OperatorBlock();
-			else
-			{
-				AddErrorAndSkip(61, {});
-				return false;
-			}
 			break;
 		default:
 			AddErrorAndSkip(17, { beginsy, ifsy, whilesy, withsy, endsy, point });
@@ -572,14 +571,13 @@ void CParser::CompositeOperator()
 		else
 		{
 			if (Accept(elsesy, false) || Accept(point, false) || Accept(endsy, false)) return;
-			AddErrorAndSkip(14, { beginsy, ifsy, whilesy, withsy, endsy, point });
 		}
 	}
 	else
 	{
+
 		AddErrorAndSkip(13, { beginsy, ifsy, whilesy, withsy, endsy, point });
 	}
-
 }
 
 void CParser::ComplexOperator()

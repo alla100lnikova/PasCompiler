@@ -53,7 +53,7 @@ public:
 	//Раздел описания типов
 	bool TypesBlock();
 	//Описание типа
-	void TypeDescription();
+	bool TypeDescription();
 	//Тип
 	CType* Type();
 	//Записи
