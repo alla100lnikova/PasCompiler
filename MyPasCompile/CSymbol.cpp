@@ -43,7 +43,7 @@ eCharType CSymbol::GetCharType(char Char)
 		return ctNumber;
 	}
 
-	if (Char >= 'a' && Char <= 'z' || Char >= 'A' && Char <= 'Z')
+	if (Char >= 'a' && Char <= 'z' || Char >= 'A' && Char <= 'Z' || Char == '_')
 	{
 		return ctChar;
 	}
