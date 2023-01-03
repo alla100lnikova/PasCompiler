@@ -29,7 +29,6 @@ public:
 	CParser(CLexer* Lex, CSymbol* CurSym) : Lexer(Lex), m_pCurrentSymbol(CurSym), InWithOperator(false)
 	{
 		Sem = new CSemantic();
-		Program();
 	}
 	~CParser() 
 	{ 
