@@ -8,7 +8,7 @@ void CParser::AddErrorAndSkip(int ErrorCode, vector<eOperator> SkipSym)
 
 bool CParser::Accept(eOperator Next, bool GetNext /* = true */)
 {
-	if (GetNext) LexerGiveMeSymbolBistra();
+	if (GetNext) GetLexerSymbol();
 	return m_pCurrentSymbol && m_pCurrentSymbol->SymbolCode == Next;
 }
 
@@ -16,7 +16,7 @@ void CParser::SkipTo(vector<eOperator> SkipSym)
 {
 	while (m_pCurrentSymbol && find(SkipSym.begin(), SkipSym.end(), m_pCurrentSymbol->SymbolCode) == SkipSym.end())
 	{
-		LexerGiveMeSymbolBistra();
+		GetLexerSymbol();
 	}
 }
 
@@ -24,17 +24,17 @@ void CParser::Program()
 {
 	if (Accept(programsy, false))
 	{
-		LexerGiveMeSymbolBistra();
+		GetLexerSymbol();
 		if (!Accept(ident, false))
 		{
 			AddErrorAndSkip(2, {});
-			LexerGiveMeSymbolBistra();
+			GetLexerSymbol();
 		}
 		else
 		{
 			Sem->SetProgName(m_pCurrentSymbol, Lexer->GetCurrentStr());
 		}
-		if (LexerGiveMeSymbolBistra() && FileList()) LexerGiveMeSymbolBistra();
+		if (GetLexerSymbol() && FileList()) GetLexerSymbol();
 	}
 	else
 	{
@@ -104,7 +104,7 @@ void CParser::ProgramBlock()
 			if (!VarBlock()) AddErrorAndSkip(18, {});
 			break;
 		case beginsy:
-			if (LexerGiveMeSymbolBistra()) OperatorBlock();
+			if (GetLexerSymbol()) OperatorBlock();
 			else AddErrorAndSkip(13, {});
 			break;
 		default:
@@ -117,7 +117,7 @@ void CParser::ProgramBlock()
 
 bool CParser::TypesBlock()
 {
-	LexerGiveMeSymbolBistra();
+	GetLexerSymbol();
 	while ((!Accept(endsy, false)
 			&& !Accept(varsy, false)
 			&& !Accept(beginsy, false)
@@ -132,7 +132,7 @@ bool CParser::TypesBlock()
 				AddErrorAndSkip(14, { varsy, beginsy, ifsy, whilesy, withsy, endsy, point });
 				break;
 			}
-			LexerGiveMeSymbolBistra();
+			GetLexerSymbol();
 		}
 	}
 
@@ -148,7 +148,7 @@ bool CParser::TypesBlock()
 			}
 			break;
 		case beginsy:
-			if (LexerGiveMeSymbolBistra()) OperatorBlock();
+			if (GetLexerSymbol()) OperatorBlock();
 			else
 			{
 				AddErrorAndSkip(17, { beginsy, point });
@@ -176,7 +176,7 @@ bool CParser::TypeDescription()
 		string TypeSymbol = m_pCurrentSymbol->GetSymbol();
 		if (Accept(equalsy))
 		{
-			if (LexerGiveMeSymbolBistra())
+			if (GetLexerSymbol())
 			{
 				CType* BaseType = Type();
 				if (BaseType && BaseType->GetCustType() != tRecord) BaseType = BaseType->GetBaseType();
@@ -218,7 +218,7 @@ CType* CParser::Type()
 CRecordType* CParser::RecordType()
 {
 	CRecordType* Rec = nullptr;
-	if (LexerGiveMeSymbolBistra() && !(Rec = RecordFields())) return nullptr;
+	if (GetLexerSymbol() && !(Rec = RecordFields())) return nullptr;
 	if (!Accept(endsy, false))
 	{
 		AddErrorAndSkip(13, { varsy, beginsy, ifsy, whilesy, withsy, endsy, point });
@@ -250,7 +250,7 @@ CRecordType* CParser::RecordFields(bool IsRightpar)
 				return nullptr;
 			}
 	case casesy:
-		if (LexerGiveMeSymbolBistra())
+		if (GetLexerSymbol())
 		{
 			if (VariantRecordPart(Rec)) return Rec;
 			else return nullptr;
@@ -273,7 +273,7 @@ bool CParser::FixRecordPart(CRecordType* Rec)
 	while (Type = RecordSection(Vars))
 	{
 		Sem->SetRecFieldType(Type, Vars, Rec, Lexer->GetCurrentStr());
-		if (Accept(semicolon)) LexerGiveMeSymbolBistra();
+		if (Accept(semicolon)) GetLexerSymbol();
 		else
 		{
 			if (Accept(endsy, false))
@@ -301,12 +301,12 @@ CType* CParser::RecordSection(vector<string>& Vars)
 	while (Accept(ident, false))
 	{
 		Vars.push_back(m_pCurrentSymbol->GetSymbol());
-		if (Accept(comma)) LexerGiveMeSymbolBistra();
+		if (Accept(comma)) GetLexerSymbol();
 		else
 		{
 			if (Accept(colon, false))
 			{
-				if (LexerGiveMeSymbolBistra()) return Type();
+				if (GetLexerSymbol()) return Type();
 				else
 				{
 					AddErrorAndSkip(2, { varsy, beginsy, ifsy, whilesy, withsy });
@@ -399,7 +399,7 @@ bool CParser::Variant(CRecordType* Rec)
 		if (Accept(leftpar))
 		{
 			CRecordType* ChildRec;
-			if (LexerGiveMeSymbolBistra() && (ChildRec = RecordFields(true)))
+			if (GetLexerSymbol() && (ChildRec = RecordFields(true)))
 			{
 				Sem->CheckVarRecordPartType(Rec, ChildRec, Val, Lexer->GetCurrentStr());
 				return true;
@@ -427,7 +427,7 @@ vector<CValue*> CParser::VariantLableList(CType* FlagType)
 {
 	eValueType ValType = Sem->GetValType(FlagType);
 	vector<CValue*> Op;
-	while (LexerGiveMeSymbolBistra()
+	while (GetLexerSymbol()
 		&& !Accept(colon, false)
 		&& !Accept(endsy, false)
 		&& !Accept(varsy, false)
@@ -478,13 +478,13 @@ bool CParser::Sign()
 
 CType* CParser::SignedNumber()
 {
-	if (Sign() && LexerGiveMeSymbolBistra()) return UnsignedNumber();
+	if (Sign() && GetLexerSymbol()) return UnsignedNumber();
 	return nullptr;
 }
 
 bool CParser::VarBlock()
 {
-	while (LexerGiveMeSymbolBistra()
+	while (GetLexerSymbol()
 		&& (!Accept(endsy, false)
 			&& !Accept(beginsy, false)
 			&& !Accept(ifsy, false)
@@ -502,7 +502,7 @@ bool CParser::VarBlock()
 		switch (m_pCurrentSymbol->SymbolCode)
 		{
 		case beginsy:
-			if (LexerGiveMeSymbolBistra()) OperatorBlock();
+			if (GetLexerSymbol()) OperatorBlock();
 			break;
 		default:
 			AddErrorAndSkip(17, { beginsy, ifsy, whilesy, withsy, endsy, point });
@@ -523,13 +523,13 @@ bool CParser::OneTypeVar()
 	while (!Accept(colon, false) && Accept(ident, false))
 	{
 		Sem->AddVar(m_pCurrentSymbol, Lexer->GetCurrentStr());
-		if (Accept(comma)) LexerGiveMeSymbolBistra();
+		if (Accept(comma)) GetLexerSymbol();
 		else break;
 	}
 
 	if (Accept(colon, false))
 	{
-		if (LexerGiveMeSymbolBistra())
+		if (GetLexerSymbol())
 		{
 			CType* BaseType = Type();
 			Sem->SetVarsType(BaseType, Lexer->GetCurrentStr());
@@ -561,7 +561,7 @@ void CParser::CompositeOperator()
 		}
 		else
 		{
-			LexerGiveMeSymbolBistra();
+			GetLexerSymbol();
 		}
 	}
 
@@ -587,7 +587,7 @@ void CParser::ComplexOperator()
 	switch (m_pCurrentSymbol->SymbolCode)
 	{
 	case beginsy:
-		LexerGiveMeSymbolBistra();
+		GetLexerSymbol();
 		CompositeOperator();
 		break;
 	case ifsy: ConditionOperator(); break;
@@ -608,7 +608,7 @@ void CParser::ConditionOperator()
 
 	if (Accept(thensy, false))
 	{
-		LexerGiveMeSymbolBistra();
+		GetLexerSymbol();
 	}
 	else
 	{
@@ -618,7 +618,7 @@ void CParser::ConditionOperator()
 	Operator();
 	if (Accept(elsesy, false))
 	{
-		LexerGiveMeSymbolBistra();
+		GetLexerSymbol();
 		Operator();
 	}
 }
@@ -635,7 +635,7 @@ void CParser::CycleOperator()
 
 	if (Accept(dosy, false))
 	{
-		LexerGiveMeSymbolBistra();
+		GetLexerSymbol();
 		Operator();
 	}
 	else
@@ -653,7 +653,7 @@ void CParser::WithOperator()
 	InWithOperator.push_back(true);
 	if (Accept(dosy, false))
 	{
-		LexerGiveMeSymbolBistra();
+		GetLexerSymbol();
 		Operator();
 	}
 	else
@@ -675,7 +675,7 @@ void CParser::WithOperator()
 bool CParser::RecordVarList()
 {
 	CRecordType* Rec;
-	while (LexerGiveMeSymbolBistra())
+	while (GetLexerSymbol())
 	{
 		Rec = static_cast<CRecordType*>(Variable());
 		if (Rec && Rec->GetCustType() == tScalar) AddErrorAndSkip(140, {});
@@ -817,7 +817,7 @@ CType* CParser::VariableRecordField(CRecordType* Rec)
 	}
 
 	CType* Type = nullptr;
-	while (Accept(point, false) && LexerGiveMeSymbolBistra() && (Type = Variable(Rec)));
+	while (Accept(point, false) && GetLexerSymbol() && (Type = Variable(Rec)));
 	return Type;
 }
 
@@ -832,13 +832,13 @@ CType* CParser::Term()
 		if (MultBoolOperation())
 		{
 			if (BaseTypeName != "boolean") AddErrorAndSkip(210, {});
-			LexerGiveMeSymbolBistra();
+			GetLexerSymbol();
 			continue;
 		}
 		if (MultIntOperation())
 		{
 			if (BaseTypeName != "integer") AddErrorAndSkip(212, {});
-			LexerGiveMeSymbolBistra();
+			GetLexerSymbol();
 			continue;
 		}
 		if (MultOperation())
@@ -848,7 +848,7 @@ CType* CParser::Term()
 				|| BaseTypeName == "string"
 				|| BaseTypeName == "")
 				AddErrorAndSkip(213, {});
-			LexerGiveMeSymbolBistra();
+			GetLexerSymbol();
 			continue;
 		}
 		break;
@@ -864,7 +864,7 @@ CType* CParser::Multiplier()
 		Type = Expression();
 		if (Accept(rightpar, false))
 		{
-			LexerGiveMeSymbolBistra();
+			GetLexerSymbol();
 			return Type;
 		}
 		else
@@ -875,13 +875,13 @@ CType* CParser::Multiplier()
 	}
 	if (Accept(notsy, false))
 	{
-		LexerGiveMeSymbolBistra();
+		GetLexerSymbol();
 		return Multiplier();
 	}
 	if (Accept(ident, false)) return Variable();
 
 	Type = Constant();
-	LexerGiveMeSymbolBistra();
+	GetLexerSymbol();
 	return Type;
 }
 
@@ -903,8 +903,8 @@ CType* CParser::SimpleExpression()
 {
 	CType* Type;
 	bool IsSign = false;
-	LexerGiveMeSymbolBistra();
-	if (IsSign = Sign()) LexerGiveMeSymbolBistra();
+	GetLexerSymbol();
+	if (IsSign = Sign()) GetLexerSymbol();
 	Type = Term();
 	Type = Sem->GetBaseType(Type);
 	if (IsSign && Type && Type->GetName() != "real" && Type->GetName() != "integer")
@@ -913,7 +913,7 @@ CType* CParser::SimpleExpression()
 	bool IsBoolOp = false;
 	while (AddOperation() || (IsBoolOp = AddBoolOperation()))
 	{
-		LexerGiveMeSymbolBistra();
+		GetLexerSymbol();
 		Type = Sem->Cast(Type, Term());
 		if (IsBoolOp && Type && Type->GetName() != "boolean")
 		{

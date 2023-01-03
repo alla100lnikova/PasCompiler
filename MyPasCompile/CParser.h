@@ -15,7 +15,7 @@ private:
 	vector<bool> InWithOperator;
 	vector<pair<int, CRecordType*> > WithRec;
 
-	bool LexerGiveMeSymbolBistra()
+	bool GetLexerSymbol()
 	{
 		delete m_pCurrentSymbol;
 		m_pCurrentSymbol = Lexer->GetNextSymbol();
